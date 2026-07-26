@@ -14,7 +14,21 @@
         "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
         "document_type": {"type": "string"},
         "issuer": {"type": "string"},
-        "covered_period": {"type": ["object", "null"]}
+        "covered_period": {"type": ["object", "null"]},
+        "normalized_document": {
+          "type": "object",
+          "required": ["path", "source_sha256", "parser_version", "status"],
+          "properties": {
+            "path": {"type": "string"},
+            "source_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "parser_version": {"type": "string"},
+            "status": {"enum": ["COMPLETE", "PARTIAL", "FAILED"]}
+          },
+          "additionalProperties": true
+        }
       },
       "additionalProperties": true
     },

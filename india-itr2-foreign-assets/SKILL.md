@@ -20,8 +20,10 @@ Reconcile source documents into an auditable ITR-2 filing package. Treat the wor
    - Before tax analysis, run the preprocessing workflow in [references/source-ledger.md](references/source-ledger.md).
    - Hash every source and reuse its extraction when the SHA-256 is unchanged. Do not reopen an unchanged source merely to answer a follow-up.
 3. Extract changed sources in parallel:
+   - Normalize the work queue first with `scripts/preprocess_sources.py`; do not create a one-off parser for a supported format.
    - Create one isolated extraction job per new or changed file.
    - Spawn one worker per file up to the available agent limit; process excess files in batches.
+   - Give each worker the normalized document envelope. Reopen the raw source only when normalization is partial/failed or visual evidence is required.
    - Never let workers concurrently edit the central store. Each worker writes only its assigned source record; the coordinator performs the single merge.
 4. Build independent ledgers from the central store:
    - Salary and perquisite ledger.
@@ -49,12 +51,15 @@ Use `scripts/source_store.py` for document-led work:
 ```bash
 python3 scripts/source_store.py init --workspace /private/path/itr-workpaper
 python3 scripts/source_store.py scan --workspace /private/path/itr-workpaper --source-dir /private/path/sources
-# Dispatch one extraction worker for every item in work_queue.json.
+python3 scripts/preprocess_sources.py --workspace /private/path/itr-workpaper --jobs 4
+# Dispatch one semantic extraction worker for every item in work_queue.json.
 python3 scripts/source_store.py merge --workspace /private/path/itr-workpaper
 python3 scripts/source_store.py status --workspace /private/path/itr-workpaper
 ```
 
 Keep the workspace outside this skill or any public repository. The initialized workspace is deny-all git-ignored. Read [references/source-ledger.md](references/source-ledger.md) completely before preprocessing or delegating source files.
+
+Read [references/generic-parsing.md](references/generic-parsing.md) before adding a parser dependency or writing parsing code. Extend the generic parser for reusable format support; do not accumulate taxpayer- or broker-specific scripts.
 
 ## Screen-by-screen portal mode
 

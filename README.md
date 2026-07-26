@@ -23,6 +23,7 @@ The skill supports both document-led reconciliation and live, screen-by-screen f
 - Incremental per-file preprocessing with SHA-256 provenance
 - A persistent central JSON ledger for fast follow-up questions
 - Selective invalidation when a source file changes
+- Generic PDF, JSON, CSV, spreadsheet, text, DOCX, image, and ZIP preprocessing
 - One-screen-at-a-time portal guidance
 
 ## Privacy first
@@ -115,12 +116,18 @@ python3 india-itr2-foreign-assets/scripts/source_store.py scan \
   --workspace /private/path/itr-workpaper \
   --source-dir /private/path/source-documents \
   --replace-inventory \
-  --extractor-version 1
+  --extractor-version parser-1.0.0_claims-1
+
+python3 india-itr2-foreign-assets/scripts/preprocess_sources.py \
+  --workspace /private/path/itr-workpaper \
+  --jobs 4
 ```
 
-The generated work queue contains one isolated parsing job per new or changed
-file. Workers write per-source records; a single coordinator then performs the
-atomic merge:
+The generic preprocessor normalizes PDF pages, spreadsheet cells, CSV rows, JSON
+paths, archive members, text and other supported structures. The generated work
+queue then contains one isolated semantic-classification job per new or changed
+file. Workers write per-source records; a single coordinator performs the atomic
+merge:
 
 ```bash
 python3 india-itr2-foreign-assets/scripts/source_store.py merge \

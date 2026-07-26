@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Normalized source document envelope",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "parser",
+    "source",
+    "status",
+    "document",
+    "warnings"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "parser": {
+      "type": "object",
+      "required": ["name", "version", "parsed_at"],
+      "properties": {
+        "name": {"const": "itr-generic-source-parser"},
+        "version": {"type": "string"},
+        "parsed_at": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+    "source": {
+      "type": "object",
+      "required": ["path", "sha256", "size", "extension"],
+      "properties": {
+        "path": {"type": "string"},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "size": {"type": "integer", "minimum": 0},
+        "extension": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+    "status": {"enum": ["COMPLETE", "PARTIAL", "FAILED"]},
+    "document": {
+      "type": "object",
+      "required": ["format", "backend", "units", "members", "metadata"],
+      "properties": {
+        "format": {"type": "string"},
+        "backend": {"type": "string"},
+        "units": {"type": "array"},
+        "members": {"type": "array"},
+        "metadata": {"type": "object"}
+      },
+      "additionalProperties": true
+    },
+    "warnings": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "stats": {"type": "object"}
+  },
+  "additionalProperties": true
+}

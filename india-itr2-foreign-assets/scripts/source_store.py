@@ -21,6 +21,7 @@ CENTRAL = "central_store.json"
 FACTS = "reconciled_facts.json"
 INCOMING = "incoming"
 RECORDS = "source-records"
+NORMALIZED = "normalized"
 
 
 class StoreError(Exception):
@@ -103,6 +104,7 @@ def init_workspace(args: argparse.Namespace) -> None:
     workspace.mkdir(parents=True, exist_ok=True)
     (workspace / INCOMING).mkdir(exist_ok=True)
     (workspace / RECORDS).mkdir(exist_ok=True)
+    (workspace / NORMALIZED).mkdir(exist_ok=True)
 
     gitignore = workspace / ".gitignore"
     if not gitignore.exists():
@@ -195,6 +197,7 @@ def scan_sources(args: argparse.Namespace) -> None:
             by_hash.pop(old["sha256"], None)
         record_rel = f"{RECORDS}/{source_id}/{digest}.json"
         incoming_rel = f"{INCOMING}/{source_id}.json"
+        normalized_rel = f"{NORMALIZED}/{source_id}/{digest}.json"
         record_ready = (workspace / record_rel).is_file()
         extractor_changed = False
         if record_ready and args.extractor_version:
@@ -221,6 +224,7 @@ def scan_sources(args: argparse.Namespace) -> None:
             "record": record_rel if record_ready and not requires_extraction else None,
             "expected_record": record_rel,
             "agent_output": incoming_rel,
+            "normalized_output": normalized_rel,
             "requested_extractor_version": args.extractor_version,
             "duplicate_content_of": duplicate_of,
             "last_scanned_at": utc_now(),
@@ -247,6 +251,7 @@ def scan_sources(args: argparse.Namespace) -> None:
                     "previous_sha256": old.get("sha256") if version_changed else None,
                     "requested_extractor_version": args.extractor_version,
                     "agent_output": str(workspace / incoming_rel),
+                    "normalized_output": str(workspace / normalized_rel),
                 }
             )
 

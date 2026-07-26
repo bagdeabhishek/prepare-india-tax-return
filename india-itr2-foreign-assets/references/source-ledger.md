@@ -39,6 +39,8 @@ itr-workpaper/
 ├── .gitignore
 ├── manifest.json
 ├── work_queue.json
+├── normalized/
+│   └── <source-id>/<sha256>.json
 ├── incoming/
 │   └── <source-id>.json
 ├── source-records/
@@ -58,14 +60,15 @@ Run preprocessing before substantive tax analysis:
 1. Initialize the workspace.
 2. Scan all supplied files and compute SHA-256 hashes.
 3. Read `work_queue.json`.
-4. Dispatch one parsing worker for each queued file, subject to the available
-   agent limit. Process remaining files in batches.
-5. Have each worker write its result to the exact `agent_output` path in its
-   queue item.
-6. Run one coordinator merge after all available workers finish.
-7. Review pending sources, extraction warnings, conflicts, and control totals.
-8. Reconcile claims into facts and store each fact's `depends_on` claim IDs.
-9. Use `central_store.json` for schedule mapping and follow-up questions.
+4. Run `preprocess_sources.py` to generate normalized document envelopes.
+5. Dispatch one semantic extraction worker for each queued file, subject to the
+   available agent limit. Process remaining files in batches.
+6. Have each worker read `normalized_output` and write its result to the exact
+   `agent_output` path in its queue item.
+7. Run one coordinator merge after all available workers finish.
+8. Review pending sources, extraction warnings, conflicts, and control totals.
+9. Reconcile claims into facts and store each fact's `depends_on` claim IDs.
+10. Use `central_store.json` for schedule mapping and follow-up questions.
 
 Commands:
 
@@ -75,7 +78,10 @@ python3 scripts/source_store.py scan \
   --workspace /private/itr-workpaper \
   --source-dir /private/source-documents \
   --replace-inventory \
-  --extractor-version 1
+  --extractor-version parser-1.0.0_claims-1
+python3 scripts/preprocess_sources.py \
+  --workspace /private/itr-workpaper \
+  --jobs 4
 python3 scripts/source_store.py merge --workspace /private/itr-workpaper
 python3 scripts/source_store.py set-facts \
   --workspace /private/itr-workpaper \
@@ -94,13 +100,14 @@ Give each worker only:
 
 - One source file.
 - The matching queue item.
+- The normalized envelope at `normalized_output`.
 - `assets/source-record.schema.json`.
 - The relevant domain reference, if needed.
 - The exact `agent_output` path.
 
 Require the worker to:
 
-1. Verify it is processing the assigned path and SHA-256.
+1. Verify the envelope path and SHA-256 match the queue item.
 2. Classify the document by contents rather than filename.
 3. Extract atomic claims without cross-file reconciliation.
 4. Retain original currency, dates, units, and signs.
@@ -108,7 +115,14 @@ Require the worker to:
 6. Include page, row, cell, statement section, or JSON path in `evidence`.
 7. Record confidence and warnings; never invent missing values.
 8. Exclude passwords, tokens, and unnecessary full identifiers.
-9. Write only its own incoming record.
+9. Record `normalized_document` path, source hash, parser version, and status in
+   the source record.
+10. Write only its own incoming record.
+
+Do not write a custom parsing script when the generic parser returned a complete
+envelope. If normalization is partial or failed, inspect its warnings and follow
+[generic-parsing.md](generic-parsing.md). Add reusable support to the generic
+parser instead of creating a taxpayer-specific extractor.
 
 Do not let parsing workers edit `manifest.json`, `central_store.json`, or another
 worker's output. The coordinator is the only merge writer. This avoids lost
