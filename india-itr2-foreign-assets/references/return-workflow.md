@@ -27,9 +27,10 @@ Do not infer residency from citizenship or employer location.
 
 ## 2. Document inventory
 
-Create one row per file with:
+Initialize the persistent source ledger and create one row per file with:
 
 - Original filename.
+- Stable source ID and SHA-256 of the exact file bytes.
 - Detected document type.
 - Issuer/account.
 - Covered dates.
@@ -38,6 +39,11 @@ Create one row per file with:
 - Key figures.
 - Duplicate group.
 - Extraction confidence.
+
+Run the preprocessing and selective-invalidation workflow in
+[source-ledger.md](source-ledger.md). On follow-ups, inspect `central_store.json`
+before opening source documents. Reopen a source only when its hash changed, an
+essential field was not extracted, or a conflict requires checking the evidence.
 
 Common documents:
 

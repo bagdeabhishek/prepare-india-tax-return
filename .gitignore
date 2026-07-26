@@ -27,3 +27,5 @@ __pycache__/
 
 # Allow intentionally tracked skill metadata and code
 !india-itr2-foreign-assets/agents/openai.yaml
+!india-itr2-foreign-assets/assets/source-record.schema.json
+!india-itr2-foreign-assets/assets/reconciled-facts.schema.json

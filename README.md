@@ -20,6 +20,9 @@ The skill supports both document-led reconciliation and live, screen-by-screen f
 - Self-assessment tax, Schedule IT, and challan verification
 - Form 67 preparation, evidence, validation, and acknowledgement checks
 - Final ITR JSON reconciliation without unsafe direct editing
+- Incremental per-file preprocessing with SHA-256 provenance
+- A persistent central JSON ledger for fast follow-up questions
+- Selective invalidation when a source file changes
 - One-screen-at-a-time portal guidance
 
 ## Privacy first
@@ -88,15 +91,50 @@ The skill:
 
 1. Establishes the assessment year, residency, regime, form, and filing basis.
 2. Inventories and reconciles source documents before classifying income.
-3. Builds separate salary, income, foreign-tax, cash, account, and equity-lot ledgers.
-4. Applies schedule-specific dates and conversion rules.
-5. Maps reconciled facts into the ITR-2 schedules.
-6. Guides live filing one screen at a time with a control total at each checkpoint.
-7. Reconciles Form 67, self-assessment tax, Schedule IT, and the final utility export.
-8. Preserves unresolved items instead of inventing values.
+3. Hashes every source and preprocesses only new or changed file versions.
+4. Uses isolated per-file worker outputs and one deterministic central-store merge.
+5. Builds separate salary, income, foreign-tax, cash, account, and equity-lot ledgers.
+6. Applies schedule-specific dates and conversion rules.
+7. Maps reconciled facts into the ITR-2 schedules.
+8. Guides live filing one screen at a time with a control total at each checkpoint.
+9. Reconciles Form 67, self-assessment tax, Schedule IT, and the final utility export.
+10. Preserves unresolved items instead of inventing values.
 
 The detailed live-filing sequence is in
 [`portal-step-by-step.md`](india-itr2-foreign-assets/references/portal-step-by-step.md).
+
+## Incremental source preprocessing
+
+For a document-heavy return, initialize a private workpaper:
+
+```bash
+python3 india-itr2-foreign-assets/scripts/source_store.py init \
+  --workspace /private/path/itr-workpaper
+
+python3 india-itr2-foreign-assets/scripts/source_store.py scan \
+  --workspace /private/path/itr-workpaper \
+  --source-dir /private/path/source-documents \
+  --replace-inventory \
+  --extractor-version 1
+```
+
+The generated work queue contains one isolated parsing job per new or changed
+file. Workers write per-source records; a single coordinator then performs the
+atomic merge:
+
+```bash
+python3 india-itr2-foreign-assets/scripts/source_store.py merge \
+  --workspace /private/path/itr-workpaper
+```
+
+Every extracted claim records the exact file hash and page, row, cell, or JSON
+path that supports it. Reconciled facts depend on claim IDs, so changing one
+source makes only dependent facts stale. Follow-up questions use the central
+store instead of rereading every source.
+
+The private workspace is initialized with a deny-all `.gitignore`. Never create
+it inside this public repository. See
+[`source-ledger.md`](india-itr2-foreign-assets/references/source-ledger.md).
 
 ## Schedule FA CSV utility
 
@@ -122,6 +160,7 @@ Always download a fresh template from the current portal version and test a sing
 └── india-itr2-foreign-assets/
     ├── SKILL.md
     ├── agents/openai.yaml
+    ├── assets/
     ├── references/
     └── scripts/
 ```

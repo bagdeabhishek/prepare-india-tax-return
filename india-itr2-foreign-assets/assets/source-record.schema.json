@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ITR source extraction record",
+  "type": "object",
+  "required": ["schema_version", "source", "extractor", "claims"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "source": {
+      "type": "object",
+      "required": ["source_id", "path", "sha256"],
+      "properties": {
+        "source_id": {"type": "string"},
+        "path": {"type": "string"},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "document_type": {"type": "string"},
+        "issuer": {"type": "string"},
+        "covered_period": {"type": ["object", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "extractor": {
+      "type": "object",
+      "required": ["name", "version", "extracted_at"],
+      "properties": {
+        "name": {"type": "string"},
+        "version": {"type": "string"},
+        "extracted_at": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["local_id", "kind", "values", "evidence"],
+        "properties": {
+          "local_id": {"type": "string"},
+          "kind": {"type": "string"},
+          "values": {"type": "object"},
+          "period": {"type": ["object", "null"]},
+          "evidence": {"type": "object"},
+          "confidence": {
+            "enum": ["HIGH", "MEDIUM", "LOW", "UNRESOLVED"]
+          },
+          "notes": {
+            "type": "array",
+            "items": {"type": "string"}
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {"type": "string"}
+    }
+  },
+  "additionalProperties": true
+}

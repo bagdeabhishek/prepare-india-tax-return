@@ -13,27 +13,48 @@ Reconcile source documents into an auditable ITR-2 filing package. Treat the wor
    - Confirm assessment year, financial year, calendar year used by Schedule FA, residential status, regime, filing status, and ITR form.
    - Confirm whether the taxpayer is resident and ordinarily resident before treating Schedule FA as applicable.
    - Do not reuse dates, exchange rates, thresholds, or form rules from another assessment year without current verification.
-2. Secure and inventory documents:
+2. Secure, inventory, and hash documents:
    - Accept passwords only for opening the supplied files; do not repeat passwords or embed them in outputs.
    - Inventory Form 16 Part A/B, Annexure, AIS JSON/PDF, TIS, prefill JSON, bank statements, broker quarterly/annual statements, 1042-S or equivalent tax forms, vest notices, trade confirmations, and loan documents.
    - Detect duplicates and misleading filenames by content, period, account, opening/closing balance, and transaction identity.
-3. Extract independent ledgers:
+   - Before tax analysis, run the preprocessing workflow in [references/source-ledger.md](references/source-ledger.md).
+   - Hash every source and reuse its extraction when the SHA-256 is unchanged. Do not reopen an unchanged source merely to answer a follow-up.
+3. Extract changed sources in parallel:
+   - Create one isolated extraction job per new or changed file.
+   - Spawn one worker per file up to the available agent limit; process excess files in batches.
+   - Never let workers concurrently edit the central store. Each worker writes only its assigned source record; the coordinator performs the single merge.
+4. Build independent ledgers from the central store:
    - Salary and perquisite ledger.
    - Domestic interest/dividend/capital-gain ledger.
    - Foreign cash, dividend, interest, tax-withholding, acquisition-lot, sale, and account-balance ledgers.
    - Keep original currency, transaction date, quantity, price/FMV, tax, and source document/page.
-4. Reconcile before classifying:
+5. Reconcile before classifying:
    - Tie quarterly openings to prior closings.
    - Tie lot quantities to closing holdings.
    - Tie dividends and withholding to annual tax forms, allowing for tax-form rounding.
    - Distinguish shares withheld for payroll tax from an actual investor-directed sale.
    - Flag unresolved discrepancies and proxy dates; never silently force totals.
-5. Map reconciled facts to ITR schedules.
-6. Apply the correct conversion rule for each field.
-7. Generate import files or a manual-entry checklist.
-8. Validate control totals and explain every figure changed.
+   - Record each reconciled fact with the claim IDs it depends on. A changed source hash must invalidate only dependent facts.
+6. Map reconciled facts to ITR schedules.
+7. Apply the correct conversion rule for each field.
+8. Generate import files or a manual-entry checklist.
+9. Validate control totals and explain every figure changed.
 
 Read [references/return-workflow.md](references/return-workflow.md) for the complete document-to-schedule sequence.
+
+## Persistent source ledger
+
+Use `scripts/source_store.py` for document-led work:
+
+```bash
+python3 scripts/source_store.py init --workspace /private/path/itr-workpaper
+python3 scripts/source_store.py scan --workspace /private/path/itr-workpaper --source-dir /private/path/sources
+# Dispatch one extraction worker for every item in work_queue.json.
+python3 scripts/source_store.py merge --workspace /private/path/itr-workpaper
+python3 scripts/source_store.py status --workspace /private/path/itr-workpaper
+```
+
+Keep the workspace outside this skill or any public repository. The initialized workspace is deny-all git-ignored. Read [references/source-ledger.md](references/source-ledger.md) completely before preprocessing or delegating source files.
 
 ## Screen-by-screen portal mode
 

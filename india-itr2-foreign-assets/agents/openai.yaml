@@ -1,4 +1,4 @@
 interface:
   display_name: "India ITR-2 Foreign Assets"
-  short_description: "Screen-by-screen ITR-2 and foreign asset filing"
-  default_prompt: "Use $india-itr2-foreign-assets to guide me through my ITR-2 filing one portal screen at a time and reconcile foreign income, assets, tax credit, and Form 67."
+  short_description: "Incremental ITR-2 and foreign asset reconciliation"
+  default_prompt: "Use $india-itr2-foreign-assets to preprocess my tax documents once, maintain a hash-provenance ledger, and reconcile my ITR-2 filing."
