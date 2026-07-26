@@ -100,6 +100,27 @@ def normalize_nature_entity(value: str) -> str:
     return value.title()
 
 
+def normalize_entity_name(value: str) -> str:
+    value = plain_ascii(value, remove_commas=True)
+    if not value:
+        raise ValueError("entity name is blank")
+    listed = re.match(r"^(.*?)\s+\(([A-Za-z0-9.\-]+)\)$", value)
+    if listed:
+        return f"{listed.group(1).strip()} ({listed.group(2).upper()})"
+    return value
+
+
+def normalize_zip_code(value: str) -> str:
+    value = plain_ascii(value)
+    if not value:
+        raise ValueError("ZIP code is blank")
+    if len(value) > 8:
+        raise ValueError(
+            f"ZIP code exceeds the portal-supported 8 characters: {value!r}"
+        )
+    return value
+
+
 def normalize_status(value: str) -> str:
     mapping = {
         "owner": "Owner",
@@ -158,9 +179,9 @@ def normalize_a3(row: dict[str, str], serial: int) -> list[str]:
     return [
         str(serial),
         country_code(row[A3[1]]),
-        plain_ascii(row[A3[2]], remove_commas=True),
+        normalize_entity_name(row[A3[2]]),
         plain_ascii(row[A3[3]], remove_commas=True),
-        plain_ascii(row[A3[4]]),
+        normalize_zip_code(row[A3[4]]),
         normalize_nature_entity(row[A3[5]]),
         iso_date(row[A3[6]]),
         whole_rupees(row[A3[7]]),
@@ -178,7 +199,7 @@ def normalize_a2(row: dict[str, str], serial: int) -> list[str]:
         country_code(row[A2[1]]),
         plain_ascii(row[A2[2]], remove_commas=True),
         plain_ascii(row[A2[3]], remove_commas=True),
-        plain_ascii(row[A2[4]]),
+        normalize_zip_code(row[A2[4]]),
         account,
         normalize_status(row[A2[6]]),
         iso_date(row[A2[7]]),
@@ -189,11 +210,24 @@ def normalize_a2(row: dict[str, str], serial: int) -> list[str]:
     ]
 
 
+def write_portal_csv(path: Path, header: list[str], rows: list[list[str]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", newline="", encoding="ascii") as handle:
+        writer = csv.writer(handle, quoting=csv.QUOTE_NONE, escapechar="\\")
+        writer.writerow(header)
+        writer.writerows(rows)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--table", required=True, choices=("A2", "A3"))
     parser.add_argument("--input", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument(
+        "--test-output",
+        type=Path,
+        help="Also write a one-row import-test artifact",
+    )
     args = parser.parse_args()
 
     header = A2 if args.table == "A2" else A3
@@ -201,11 +235,9 @@ def main() -> int:
     try:
         source_rows = load_rows(args.input, header)
         output_rows = [normalizer(row, i) for i, row in enumerate(source_rows, 1)]
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        with args.output.open("w", newline="", encoding="ascii") as handle:
-            writer = csv.writer(handle, quoting=csv.QUOTE_NONE, escapechar="\\")
-            writer.writerow(header)
-            writer.writerows(output_rows)
+        write_portal_csv(args.output, header, output_rows)
+        if args.test_output:
+            write_portal_csv(args.test_output, header, output_rows[:1])
     except (OSError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
@@ -214,6 +246,8 @@ def main() -> int:
         f"wrote {len(output_rows)} {args.table} rows with "
         f"{len(header)} fields to {args.output}"
     )
+    if args.test_output:
+        print(f"wrote one-row import test to {args.test_output}")
     return 0
 
 

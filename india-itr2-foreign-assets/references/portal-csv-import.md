@@ -26,12 +26,13 @@ The AY 2026-27 portal accepted the following operational format when its downloa
 - No CSV quoting.
 - Column 1, misleadingly labelled `Country/Region name`, contains serial numbers `1,2,3...`.
 - Column 2 contains the numeric country code; USA is `2` in that portal list.
+- For listed A3 holdings, column 3 uses `Company Name (TICKER)`, with one space before the opening parenthesis and no commas. Do not invent a ticker for an unlisted entity.
 - Remove commas from entity names and addresses.
 - Use plain ASCII.
 - Use `Company`, not `COMPANY` or `LISTED COMPANY`.
 - Use ISO dates `YYYY-MM-DD` with leading zeros.
 - Use whole INR numbers without commas, currency symbols, or decimals unless the portal explicitly accepts otherwise.
-- Keep ZIP code at no more than the portal-supported length.
+- Keep ZIP code at no more than 8 characters.
 
 This is an operational workaround for importer behavior, not a substantive tax rule. Retest when the portal version changes.
 
@@ -39,18 +40,29 @@ This is an operational workaround for importer behavior, not a substantive tax r
 
 Working order:
 
-1. Serial number.
-2. Country code.
-3. Entity name without commas.
+1. Serial number: although the downloaded header says `Country/Region name`,
+   enter `1`, `2`, `3`, and so on.
+2. Country code only: do not enter the country name. For the portal's AY 2026-27
+   list, USA was `2`.
+3. Listed entity name without commas, followed by ticker in parentheses:
+   `NVIDIA CORPORATION (NVDA)`. For an unlisted entity, enter only its supported
+   legal name.
 4. Address without commas.
-5. ZIP.
-6. Nature of entity, such as `Company`.
-7. Acquisition date `YYYY-MM-DD`.
+5. ZIP code with a maximum of 8 characters.
+6. Nature of entity: use the exact dropdown label `Company`.
+7. Acquisition date as literal `YYYY-MM-DD` text with leading zeros. For
+   example, 5 September 2024 is `2024-09-05`. Merely formatting a spreadsheet
+   cell to look this way is insufficient if its stored/exported CSV value is
+   different.
 8. Initial investment value INR.
 9. Peak investment value INR.
 10. Closing value INR.
 11. Gross amount paid/credited INR.
 12. Gross sale/redemption proceeds INR.
+
+Generate the CSV directly with `prepare_fa_csv.py` where possible. Inspect the
+raw CSV date text after generation and avoid reopening/resaving the
+`PORTAL_READY` artifact in spreadsheet software that may change the stored date.
 
 ## 4. A2 handling
 
