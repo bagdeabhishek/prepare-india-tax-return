@@ -1,0 +1,267 @@
+# Portal step-by-step runbook
+
+## Contents
+
+1. Interaction contract
+2. Filing order
+3. Screen checkpoints
+4. Tax payment and Schedule IT
+5. Form 67
+6. Final JSON and submission
+7. Post-filing controls
+8. Common portal traps
+
+## 1. Interaction contract
+
+Use this mode when the user is at a named schedule, shares a portal screenshot, or asks what to enter next.
+
+- Handle exactly one visible screen at a time.
+- Lead with the exact field values or choices.
+- Include one control total for the screen.
+- Wait for the next screen, screenshot, or exported JSON.
+- Do not repeat completed schedules unless an upstream edit requires recalculation.
+- Treat warnings separately from blocking errors.
+- Inspect ambiguous labels or exported JSON before guessing.
+- Keep a checkpoint ledger: `screen`, `entered`, `expected total`, `saved`, `needs refresh`.
+
+## 2. Filing order
+
+Use this default order:
+
+1. Part A General and filing status.
+2. Salary.
+3. House Property.
+4. Capital Gains and 112A, if applicable.
+5. Other Sources and dividend accrual table.
+6. CYLA, BFLA, CFL, VI-A, and SI.
+7. FSI.
+8. TR.
+9. FA.
+10. AL.
+11. Tax Paid and Schedule IT.
+12. Part B-TI and Part B-TTI refresh.
+13. Form 67.
+14. Final validation, submission, and e-verification.
+
+File Form 67 before final ITR validation when foreign-tax relief is claimed. The portal can enforce Form 67 as a blocking validation even when the current statutory deadline permits later filing.
+
+## 3. Screen checkpoints
+
+### Part A
+
+Confirm:
+
+- Correct ITR form, assessment year, filing section, status, and regime.
+- Seventh Proviso is `No` when ordinary section 139(1) filing is already mandatory.
+- Residential-status condition is factual; do not infer ROR from citizenship.
+- Foreign-assets/income question is `Yes` when any listed condition applies.
+
+### Salary and TDS
+
+Confirm:
+
+- Salary, perquisites, and profit in lieu are classified separately.
+- RSU/ESPP perquisites already in Form 16 are not added again.
+- Standard deduction and taxable salary reconcile to Form 16.
+- Schedule TDS1 `Income chargeable under Salaries` matches Form 16 income chargeable, not gross salary, even if prefill uses gross.
+- TDS credit matches Form 16/26AS.
+
+### House property
+
+Do not claim construction-period interest as current self-occupied interest while the property remains under construction. Preserve it for the legally available post-completion treatment.
+
+### Capital gains
+
+- Use trade confirmations for actual disposals.
+- Do not treat shares withheld at vest as investor-directed sales without sale evidence.
+- Distinguish section 112 from section 112A.
+- Refresh SI after CG changes.
+
+### Other Sources
+
+- Report gross foreign dividends; do not net foreign withholding.
+- Put foreign broker/deposit interest in the supported interest row.
+- Make dividend accrual buckets equal the dividend total.
+- Do not place regular interest in a dividend-only accrual row.
+
+### FSI and TR
+
+- OS foreign income equals FSI foreign income by head.
+- FSI foreign tax equals TR foreign tax.
+- FSI relief equals TR relief and does not exceed the cap.
+- Use the portal's current country-code dictionary. For AY 2026-27 the portal represented the United States as code `2`; do not substitute an ISD dialing code.
+- In Schedule TR, `TaxPaidOutsideIndFlg` corresponds to whether previously relieved foreign tax was refunded/credited by the foreign authority. `No` is correct when no refund occurred; it does not mean no foreign tax was paid.
+
+### FA and AL
+
+- FA uses the calendar year ending 31 December.
+- AL uses 31 March.
+- Reconcile A2 closing to A3 securities plus cash.
+- Use historical cost where AL asks for cost, not market value.
+- Report only the taxpayer's supportable ownership share of jointly owned assets and related liabilities.
+
+## 4. Tax payment and Schedule IT
+
+### Before payment
+
+Record from Part B-TTI:
+
+- Net tax liability.
+- Sections 234A/234B/234C interest.
+- Aggregate liability.
+- Existing TDS/TCS/advance-tax credits.
+- Rounded balance payable.
+
+Explain interest by tying it to the actual shortfall and period. Do not call statutory interest a penalty.
+
+### If the user selected Pay Later
+
+`Pay Later` does not block payment. Use the independent e-Pay Tax route.
+
+For an individual paying self-assessment tax for AY 2026-27:
+
+1. `e-File → e-Pay Tax`.
+2. Select Income-tax Act, 1961.
+3. Select `New Payment`.
+4. Select `Income Tax`.
+5. Major head: `0021 – Income Tax (Other than Companies)`.
+6. Minor head: `300 – Self-Assessment Tax`.
+7. Assessment year: `2026-27`.
+
+Reverify these choices for later assessment years instead of copying them.
+
+### Challan breakup
+
+- Allocate utility-computed interest to `Interest`.
+- Put the balance in `Tax` unless a supportable surcharge/cess allocation is required.
+- A small intentional overpayment is acceptable, but record the actual paid amount.
+- Do not use Regular Assessment Tax 400 or Block Assessment 311 for an ordinary self-assessment balance.
+
+### Schedule IT entry
+
+Copy from the paid challan:
+
+- Seven-digit BSR code.
+- Deposit date.
+- Five-digit challan serial number, preserving any leading zero.
+- Actual challan amount.
+
+Do not enter the CRN, UTR, transaction ID, or payment acknowledgement as the challan serial number.
+
+After saving, refresh Part B-TTI and confirm:
+
+- Schedule IT total equals the challan.
+- Self-assessment tax equals the challan.
+- Total taxes paid includes it.
+- Amount payable is zero.
+- Any small overpayment appears as a rounded refund.
+
+### Direct JSON editing
+
+Do not upload a manually edited utility-generated return JSON. Changes can invalidate the digest and leave dependent totals unsynchronised. A challan affects Schedule IT, Part B-TTI, total taxes, payable/refund, and the digest.
+
+If a working JSON is edited for diagnosis, reopen and validate it in the official utility, then export a new upload JSON.
+
+## 5. Form 67
+
+### Timing and portal behaviour
+
+- Treat Form 67 as a separate portal filing; it is not embedded in the ITR JSON.
+- File it before final ITR validation when possible.
+- If validation says Form 67 is required to claim relief, stop ITR submission, file and verify Form 67, then validate again.
+- If the ITR was already e-verified first, check the current Rule 128 deadline. When Form 67 is validly filed within that deadline, do not revise solely to reverse the filing order.
+
+### Source row
+
+For each foreign-taxed source, enter:
+
+- Country and current portal country code.
+- Source of income.
+- Gross foreign income in INR.
+- Foreign tax paid in INR.
+- Foreign tax rate.
+- Indian tax payable on that income.
+- Section 90/90A or 91 credit.
+- DTAA article and DTAA rate where applicable.
+
+For US dividends, review Article 10 and the actual withholding evidence. Do not hard-code its rate for another country or income type. For a supported 25% withholding, enter `25`, not `0.25`.
+
+Use source-level taxed income in Form 67. Do not add zero-tax foreign interest to a dividend row merely to force Form 67 income to equal consolidated FSI.
+
+### Other questions
+
+Answer from facts:
+
+- Carry-back foreign-tax refund: normally `No` unless actually claimed.
+- Foreign tax under dispute: `No` unless actually disputed.
+- Foreign-tax refund/credit received: `No` unless actually received.
+
+### Evidence
+
+Attach:
+
+- Foreign tax certificate such as Form 1042-S.
+- Broker dividend/withholding statement where it provides more exact values.
+- Proof of payment/deduction required by Rule 128(8).
+
+When annual forms round to whole foreign-currency units but statements are exact, use the exact supported workpaper amount and retain both sources.
+
+Retain the Form 67 acknowledgement showing form number, assessment year, filing type, date, acknowledgement number, and verification status.
+
+## 6. Final JSON and submission
+
+Compare the final export to the prior export. Expected payment-only changes are:
+
+- Schedule IT challan row and total.
+- Self-assessment tax and total taxes paid.
+- Payable/refund.
+- Regenerated digest.
+
+Investigate any unrelated schedule change.
+
+Final controls:
+
+- Salary, CG, OS, FSI, TR, FA, and AL remain reconciled.
+- Dividend accrual buckets equal OS dividends.
+- FSI income equals the foreign portion included under the relevant income head.
+- FSI tax equals TR tax and Form 67 tax.
+- TR relief equals TTI relief and Form 67 credit.
+- Schedule IT equals the challan.
+- Part B-TTI payable is zero.
+- Refund account is selected and valid.
+- Foreign-assets question is `Yes`.
+- Official utility/portal validation passes.
+
+Upload only the latest official export. Submit and e-verify. Save the ITR acknowledgement.
+
+## 7. Post-filing controls
+
+Retain:
+
+- Final uploaded JSON.
+- ITR acknowledgement and e-verification status.
+- Form 67 acknowledgement.
+- Self-assessment challan.
+- Form 16, AIS/TIS, broker statements, tax certificates, conversion workpapers, FA CSVs, and loan evidence.
+
+Do not revise solely because:
+
+- A small payment overage produced a rounded refund.
+- Form 67 was filed after ITR e-verification but within the currently permitted Rule 128 deadline.
+
+Revise only for a substantive incorrect field, omitted income/asset, invalid credit, or another correction requiring a revised return.
+
+## 8. Common portal traps
+
+- Confusing prefill JSON with a completed ITR upload JSON.
+- Importing a manually created file through `Import Prefill`.
+- Directly editing an upload JSON and breaking its digest.
+- Treating a portal warning as a blocking error, or vice versa.
+- Using ISD country code instead of the portal's schedule code.
+- Copying calendar-year FA income into financial-year OS/FSI.
+- Using rounded Form 1042-S values when statements establish exact amounts.
+- Entering gross salary in TDS1's income-chargeable field.
+- Entering CRN/UTR instead of BSR/date/challan serial.
+- Leaving the paid challan out of Schedule IT.
+- Claiming FTC in FSI/TR without filing Form 67.
+- Removing valid FTC merely to bypass Form 67 validation.

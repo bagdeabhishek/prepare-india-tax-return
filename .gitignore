@@ -1,0 +1,29 @@
+# Taxpayer data and generated filing artifacts
+*.json
+*.pdf
+*.xls
+*.xlsx
+*.csv
+*.zip
+*.p12
+*.pfx
+
+# Credentials and local configuration
+.env
+.env.*
+*.key
+*.pem
+hosts.yml
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Editors and operating systems
+.DS_Store
+.idea/
+.vscode/
+
+# Allow intentionally tracked skill metadata and code
+!india-itr2-foreign-assets/agents/openai.yaml
