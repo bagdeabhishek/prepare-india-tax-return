@@ -126,8 +126,9 @@ python3 india-itr2-foreign-assets/scripts/preprocess_sources.py \
 The generic preprocessor normalizes PDF pages, spreadsheet cells, CSV rows, JSON
 paths, archive members, text and other supported structures. The generated work
 queue then contains one isolated semantic-classification job per new or changed
-file. Workers write per-source records; a single coordinator performs the atomic
-merge:
+file. One agent task handles exactly one file: all available slots launch
+immediately, and queued one-file tasks refill them as they finish. Workers write
+per-source records; a single coordinator performs the atomic merge:
 
 ```bash
 python3 india-itr2-foreign-assets/scripts/source_store.py merge \

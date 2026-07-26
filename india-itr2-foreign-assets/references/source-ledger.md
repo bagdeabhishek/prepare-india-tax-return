@@ -96,6 +96,23 @@ inactive. Use `--force` for an intentional full re-extraction.
 
 ## 4. Parallel worker contract
 
+Treat `one queue item = one agent task = one source file` as mandatory unless the
+item is skipped because its hash is unchanged or it is an exact byte duplicate
+whose extraction is safely reused.
+
+Scheduling rules:
+
+1. Create all one-file tasks before semantic extraction starts.
+2. Launch as many tasks concurrently as the platform permits.
+3. Never group several files into one worker prompt, even when they come from
+   the same broker, statement period, or archive.
+4. Refill a free slot immediately with the next queued one-file task.
+5. When new-agent creation is capped, reuse an idle agent with a follow-up turn;
+   the follow-up still contains exactly one file.
+6. Let the coordinator process at most one file itself and only when doing so
+   does not delay dispatch, result collection, or the single-writer merge.
+7. Perform cross-file reconciliation only after all per-file records are merged.
+
 Give each worker only:
 
 - One source file.
@@ -128,8 +145,8 @@ Do not let parsing workers edit `manifest.json`, `central_store.json`, or anothe
 worker's output. The coordinator is the only merge writer. This avoids lost
 updates and corrupted JSON.
 
-If agent slots are fewer than files, dispatch batches. "One worker per file"
-means one isolated job per file, not unlimited simultaneous processes.
+If agent slots are fewer than files, use rolling one-file batches. Capacity
+limits reduce simultaneous execution; they do not permit multi-file tasks.
 
 ## 5. Claim and fact provenance
 

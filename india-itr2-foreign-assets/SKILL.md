@@ -21,8 +21,9 @@ Reconcile source documents into an auditable ITR-2 filing package. Treat the wor
    - Hash every source and reuse its extraction when the SHA-256 is unchanged. Do not reopen an unchanged source merely to answer a follow-up.
 3. Extract changed sources in parallel:
    - Normalize the work queue first with `scripts/preprocess_sources.py`; do not create a one-off parser for a supported format.
-   - Create one isolated extraction job per new or changed file.
-   - Spawn one worker per file up to the available agent limit; process excess files in batches.
+   - Treat one agent task per queued file as a scheduling invariant. Never assign two source files to the same task or ask one worker to inspect a directory.
+   - Launch the maximum available agent concurrency immediately. If files exceed available slots, keep one-file tasks queued and refill each slot as soon as its prior task finishes.
+   - Reuse an idle agent with a follow-up task when agent-creation limits require it, but give that turn exactly one file. The coordinator may process at most one file itself while coordinating.
    - Give each worker the normalized document envelope. Reopen the raw source only when normalization is partial/failed or visual evidence is required.
    - Never let workers concurrently edit the central store. Each worker writes only its assigned source record; the coordinator performs the single merge.
 4. Build independent ledgers from the central store:
