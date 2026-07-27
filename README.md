@@ -21,6 +21,9 @@ The skill supports both document-led reconciliation and live, screen-by-screen f
 - Self-assessment tax, Schedule IT, and challan verification
 - Form 67 preparation, evidence, validation, and acknowledgement checks
 - Final ITR JSON reconciliation without unsafe direct editing
+- Read-only final-export arithmetic audit and payment-only diff guard
+- Persistent filing decisions so answered portal questions are not repeated
+- Detailed Schedule AL cost, deposit, foreign-share, and joint-liability controls
 - Incremental per-file preprocessing with SHA-256 provenance
 - A persistent central JSON ledger for fast follow-up questions
 - Selective invalidation when a source file changes
@@ -100,7 +103,8 @@ The skill:
 7. Maps reconciled facts into the ITR-2 schedules.
 8. Guides live filing one screen at a time with a control total at each checkpoint.
 9. Reconciles Form 67, self-assessment tax, Schedule IT, and the final utility export.
-10. Preserves unresolved items instead of inventing values.
+10. Audits final JSON arithmetic and rejects unrelated changes after payment.
+11. Preserves unresolved items instead of inventing values.
 
 The detailed live-filing sequence is in
 [`portal-step-by-step.md`](india-itr2-foreign-assets/references/portal-step-by-step.md).
@@ -157,6 +161,28 @@ python3 india-itr2-foreign-assets/scripts/prepare_fa_csv.py \
 ```
 
 Always download a fresh template from the current portal version and test a single redacted row before importing a full file.
+
+## Final ITR JSON audit
+
+Audit an official utility export without modifying it:
+
+```bash
+python3 india-itr2-foreign-assets/scripts/audit_itr_json.py \
+  FINAL_OFFICIAL_EXPORT.json
+```
+
+After adding a challan, require the before/after diff to contain only expected
+payment fields:
+
+```bash
+python3 india-itr2-foreign-assets/scripts/audit_itr_json.py \
+  AFTER_PAYMENT.json \
+  --compare BEFORE_PAYMENT.json \
+  --expect-payment-only
+```
+
+The tool reports cross-schedule inconsistencies and changed JSON paths without
+printing taxpayer identifiers. Official utility validation remains mandatory.
 
 ## Repository layout
 

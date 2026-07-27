@@ -80,6 +80,10 @@ When claiming foreign tax credit:
 
 If the ITR was e-verified before Form 67, check the current Rule 128 deadline. Do not revise solely to reverse the order when Form 67 was validly filed within the permitted deadline and matches the claimed credit.
 
+Verify timing and evidence against the current official
+[Rule 128](https://wmstatic-prd.incometaxindia.gov.in/documents/20117/42998/Rule-128_2026-01-13_11-37-01_1c629b_en.pdf/145a3343-3b83-7223-7064-8fd9194f161c?download=true)
+and Form 67 portal guidance.
+
 ## 7. Conversion controls
 
 Maintain separate conversion columns for:

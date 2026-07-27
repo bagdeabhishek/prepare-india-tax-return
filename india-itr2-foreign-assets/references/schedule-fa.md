@@ -1,4 +1,4 @@
-# Schedule FA and Schedule AL
+# Schedule FA
 
 ## Contents
 
@@ -9,8 +9,7 @@
 5. A3
 6. Overlap
 7. Currency conversion
-8. Schedule AL
-9. Assumptions
+8. Assumptions
 
 ## 1. Scope and period
 
@@ -116,13 +115,7 @@ Maintain separate calculations for:
 
 Do not use market value as acquisition value, acquisition value as closing value, or an annual average rate without authority.
 
-## 8. Schedule AL
-
-If Schedule AL applies, report assets as of 31 March using the current Schedule AL valuation instructions. Schedule FA disclosure does not replace AL.
-
-Do not copy 31 December FA values into 31 March AL. Use the statement covering 31 March and include foreign securities/cash in the appropriate AL categories.
-
-## 9. Assumptions
+## 8. Assumptions
 
 If formal account-opening date is unavailable:
 
@@ -131,3 +124,6 @@ If formal account-opening date is unavailable:
 - Keep a replacement instruction for when the actual date is found.
 
 Apply the same disclosure discipline to missing acquisition dates or incomplete cost data. Never disguise a proxy as exact.
+
+When Schedule AL also applies, read [schedule-al.md](schedule-al.md). Do not
+copy Schedule FA's 31 December values into Schedule AL's 31 March statement.

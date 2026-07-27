@@ -45,10 +45,16 @@
 - Part B-TI equals salary + HP + gains + other sources after setoff/deductions.
 - Dependent CYLA/BFLA/CFL/SI/TI/TTI schedules were refreshed.
 - Schedule AL uses 31 March, not 31 December.
+- Schedule AL bank total includes deposits and supported joint-account share.
+- Schedule AL shares/securities includes domestic and foreign holdings at the
+  current required cost basis.
 - Schedule IT equals the actual self-assessment challan.
 - Part B-TTI includes the challan and shows zero payable.
 - The final utility export has a regenerated digest.
 - Form 67 acknowledgement matches the assessment year and claimed FTC.
+- `filing-decisions.json` agrees with Part A, regime, FA/AL, and Form 67.
+- `scripts/audit_itr_json.py` reports no errors on the final official export.
+- A payment-only export comparison has no unrelated changed JSON paths.
 
 ## 5. CSV controls
 

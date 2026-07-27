@@ -13,6 +13,7 @@ Reconcile source documents into an auditable ITR-2 filing package. Treat the wor
    - Confirm assessment year, financial year, calendar year used by Schedule FA, residential status, regime, filing status, and ITR form.
    - Confirm whether the taxpayer is resident and ordinarily resident before treating Schedule FA as applicable.
    - Do not reuse dates, exchange rates, thresholds, or form rules from another assessment year without current verification.
+   - Create `filing-decisions.json` in the private workpaper and record each portal decision once with its basis and source claim IDs. Read [references/filing-decisions.md](references/filing-decisions.md).
 2. Secure, inventory, and hash documents:
    - Accept passwords only for opening the supplied files; do not repeat passwords or embed them in outputs.
    - Inventory Form 16 Part A/B, Annexure, AIS JSON/PDF, TIS, prefill JSON, bank statements, broker quarterly/annual statements, 1042-S or equivalent tax forms, vest notices, trade confirmations, and loan documents.
@@ -41,9 +42,14 @@ Reconcile source documents into an auditable ITR-2 filing package. Treat the wor
 6. Map reconciled facts to ITR schedules.
 7. Apply the correct conversion rule for each field.
 8. Generate import files or a manual-entry checklist.
-9. Validate control totals and explain every figure changed.
+9. Audit the official utility export, validate control totals, and explain every figure changed.
 
 Read [references/return-workflow.md](references/return-workflow.md) for the complete document-to-schedule sequence.
+
+Before answering filing-status, regime, salary-eligibility, house-property, or
+schedule-selection questions, read
+[references/filing-decisions.md](references/filing-decisions.md). Reuse the
+recorded decision unless new evidence invalidates it.
 
 ## Persistent source ledger
 
@@ -78,7 +84,8 @@ Read [references/portal-step-by-step.md](references/portal-step-by-step.md) befo
 
 - For RSUs, ESPP, vesting, withholding shares, and lot construction, read [references/equity-compensation.md](references/equity-compensation.md).
 - For Schedule OS, FSI, TR, DTAA relief, Rule 115, Rule 128, and Form 67, read [references/foreign-income-ftc.md](references/foreign-income-ftc.md).
-- For Schedule FA A1/A2/A3 and Schedule AL, read [references/schedule-fa.md](references/schedule-fa.md).
+- For Schedule FA A1/A2/A3, read [references/schedule-fa.md](references/schedule-fa.md).
+- For Schedule AL, construction cost, bank deposits, employee shares, or joint liabilities, read [references/schedule-al.md](references/schedule-al.md).
 - Before creating or debugging an FA CSV, read [references/portal-csv-import.md](references/portal-csv-import.md).
 - For live utility/portal entry, tax payment, Form 67, validation, or submission, read [references/portal-step-by-step.md](references/portal-step-by-step.md).
 - Before final handoff, read [references/reconciliation-controls.md](references/reconciliation-controls.md).
@@ -117,7 +124,9 @@ Create a filing package containing:
 - FA A1/A2/A3 data tables and portal-ready A2/A3 CSV artifacts by default whenever Schedule FA is in scope.
 - FSI/TR/Form 67 reconciliation.
 - Assumptions and proxies register.
+- Persisted filing-decisions record.
 - Control-total report.
+- Read-only final-JSON audit and, where relevant, checkpoint comparison.
 
 Use filenames that distinguish `WORKING`, `PROVISIONAL`, `RECONCILED`, and `PORTAL_READY`. Never tell the user to import a provisional file.
 
@@ -136,6 +145,29 @@ python3 scripts/prepare_fa_csv.py \
 ```
 
 The script enforces the operational importer format documented in [references/portal-csv-import.md](references/portal-csv-import.md). Test a one-row file first when the portal version is new or the template changed.
+
+## Final utility-export audit
+
+Never treat visual portal totals as the only final control. Run the read-only
+auditor against the latest official ITR-2 utility export:
+
+```bash
+python3 scripts/audit_itr_json.py FINAL_OFFICIAL_EXPORT.json
+```
+
+After adding a self-assessment challan, compare the before/after official
+exports and require a payment-only change set:
+
+```bash
+python3 scripts/audit_itr_json.py AFTER_PAYMENT.json \
+  --compare BEFORE_PAYMENT.json \
+  --expect-payment-only
+```
+
+The auditor checks salary arithmetic, OS components, FSI/TR/TTI relief,
+Part B-TI, Schedule IT/taxes paid, payable/refund, the foreign-assets flag, and
+Schedule AL presence above the configured AY threshold. It does not edit the
+JSON or replace official utility validation.
 
 ## Handoff requirements
 

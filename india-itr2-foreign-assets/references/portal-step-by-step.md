@@ -10,6 +10,7 @@
 6. Final JSON and submission
 7. Post-filing controls
 8. Common portal traps
+9. Recovery playbooks
 
 ## 1. Interaction contract
 
@@ -23,6 +24,7 @@ Use this mode when the user is at a named schedule, shares a portal screenshot, 
 - Treat warnings separately from blocking errors.
 - Inspect ambiguous labels or exported JSON before guessing.
 - Keep a checkpoint ledger: `screen`, `entered`, `expected total`, `saved`, `needs refresh`.
+- Consult `filing-decisions.json` before asking a question already answered.
 
 ## 2. Filing order
 
@@ -55,6 +57,8 @@ Confirm:
 - Seventh Proviso is `No` when ordinary section 139(1) filing is already mandatory.
 - Residential-status condition is factual; do not infer ROR from citizenship.
 - Foreign-assets/income question is `Yes` when any listed condition applies.
+- Read [filing-decisions.md](filing-decisions.md) for the literal 115BAC
+  opt-out wording and Seventh Proviso decision tree.
 
 ### Salary and TDS
 
@@ -105,6 +109,9 @@ Do not claim construction-period interest as current self-occupied interest whil
 - Reconcile A2 closing to A3 securities plus cash.
 - Use historical cost where AL asks for cost, not market value.
 - Report only the taxpayer's supportable ownership share of jointly owned assets and related liabilities.
+- Read [schedule-al.md](schedule-al.md) before supplying AL values. Include
+  fixed deposits, the taxpayer's joint-account share, and domestic/foreign
+  shares at supported cost instead of defaulting financial-asset rows to zero.
 
 ## 4. Tax payment and Schedule IT
 
@@ -168,6 +175,19 @@ Do not upload a manually edited utility-generated return JSON. Changes can inval
 
 If a working JSON is edited for diagnosis, reopen and validate it in the official utility, then export a new upload JSON.
 
+### Three JSON types
+
+Do not confuse:
+
+1. The official portal prefill JSON, accepted by `Import Prefill`.
+2. An in-progress portal/utility draft or session state.
+3. The final official utility export accepted for return upload.
+
+`Import Prefill` is not a generic completed-return importer. A custom JSON
+containing reconciled numbers will fail there even when it is valid JSON.
+Populate schedules in the utility, save the draft, and use the utility's own
+export/upload flow.
+
 ## 5. Form 67
 
 ### Timing and portal behaviour
@@ -225,6 +245,14 @@ Compare the final export to the prior export. Expected payment-only changes are:
 
 Investigate any unrelated schedule change.
 
+Run:
+
+```bash
+python3 scripts/audit_itr_json.py AFTER_PAYMENT.json \
+  --compare BEFORE_PAYMENT.json \
+  --expect-payment-only
+```
+
 Final controls:
 
 - Salary, CG, OS, FSI, TR, FA, and AL remain reconciled.
@@ -271,3 +299,36 @@ Revise only for a substantive incorrect field, omitted income/asset, invalid cre
 - Leaving the paid challan out of Schedule IT.
 - Claiming FTC in FSI/TR without filing Form 67.
 - Removing valid FTC merely to bypass Form 67 validation.
+
+## 9. Recovery playbooks
+
+### `Error in importing, upload proper prefill JSON`
+
+- Stop retrying the custom/completed JSON in `Import Prefill`.
+- Download a fresh official prefill from the portal if prefill is needed.
+- Otherwise resume the saved utility return and enter/review schedules there.
+- Export the final upload JSON only from the official utility.
+
+### `Caught error, description null`
+
+- Save the current draft and export a checkpoint if possible.
+- Identify the last schedule changed.
+- Refresh its dependent schedules and remove partially created blank rows.
+- Reopen the utility, validate again, and capture the exact screen plus export.
+- Do not diagnose the null message by editing the JSON digest.
+
+### FA CSV says rows were skipped
+
+- Test one row.
+- Enforce the operational A2/A3 rules in
+  [portal-csv-import.md](portal-csv-import.md).
+- Confirm imported row count and totals before loading the full artifact.
+- Fall back to manual entry only for rows the current importer cannot represent.
+
+### Form 67 validation appears after ITR verification
+
+- Confirm whether the ITR is submitted/e-verified or merely validated.
+- File and verify Form 67 with the required evidence.
+- Check the current Rule 128 deadline.
+- Do not revise solely to reverse filing order when the credit and Form 67 are
+  otherwise valid and timely.

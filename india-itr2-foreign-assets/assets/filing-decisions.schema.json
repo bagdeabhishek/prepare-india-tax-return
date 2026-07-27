@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ITR-2 filing decisions",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "assessment_year",
+    "previous_year",
+    "itr_form",
+    "residential_status",
+    "filing_section",
+    "tax_regime",
+    "decisions"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "assessment_year": {"type": "string"},
+    "previous_year": {"type": "string"},
+    "schedule_fa_calendar_year_end": {"type": "string", "format": "date"},
+    "itr_form": {"type": "string"},
+    "residential_status": {"enum": ["ROR", "RNOR", "NR", "UNRESOLVED"]},
+    "filing_section": {"type": "string"},
+    "tax_regime": {"enum": ["NEW", "OLD", "UNRESOLVED"]},
+    "decisions": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["answer", "status", "basis"],
+        "properties": {
+          "answer": {},
+          "status": {
+            "enum": ["CONFIRMED", "PROVISIONAL", "UNRESOLVED", "NOT_APPLICABLE"]
+          },
+          "basis": {"type": "string"},
+          "source_claim_ids": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "last_verified": {"type": "string", "format": "date"}
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": false
+}

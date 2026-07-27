@@ -3,12 +3,13 @@
 ## Contents
 
 1. Intake and scoping
-2. Document inventory
-3. Extraction ledgers
-4. Reconciliation
-5. Schedule selection
-6. Filing sequence
-7. Handoff
+2. Persist filing decisions
+3. Document inventory
+4. Extraction ledgers
+5. Reconciliation
+6. Schedule selection
+7. Filing sequence
+8. Handoff
 
 ## 1. Intake and scoping
 
@@ -25,7 +26,17 @@ Record:
 
 Do not infer residency from citizenship or employer location.
 
-## 2. Document inventory
+## 2. Persist filing decisions
+
+Create `filing-decisions.json` using
+`assets/filing-decisions.schema.json`. Record the evidence and status for
+filing section, regime, residency, FA/AL applicability, foreign-tax credit,
+house-completion status, and joint ownership/liability shares.
+
+Read [filing-decisions.md](filing-decisions.md). Reuse confirmed decisions
+instead of asking the user the same question at each dependent schedule.
+
+## 3. Document inventory
 
 Initialize the persistent source ledger and create one row per file with:
 
@@ -56,7 +67,7 @@ Common documents:
 
 Misleading filenames are common. Classify by document contents, not filename.
 
-## 3. Extraction ledgers
+## 4. Extraction ledgers
 
 ### Salary ledger
 
@@ -78,7 +89,7 @@ Capture institution, account number, status, opening date, peak date/value, clos
 
 Capture issuer, acquisition type, date, gross/net shares, FMV/purchase price, acquisition value, peak value while held, closing value, dividends while held, sale/redemption proceeds, and tax-withheld shares.
 
-## 4. Reconciliation
+## 5. Reconciliation
 
 Use both flow and stock controls:
 
@@ -92,7 +103,7 @@ Use both flow and stock controls:
 
 Preserve discrepancies. Prefer quarterly detail over a rounded annual tax form for exact transaction values.
 
-## 5. Schedule selection
+## 6. Schedule selection
 
 Typical ITR-2 mapping:
 
@@ -110,7 +121,7 @@ Typical ITR-2 mapping:
 - Foreign assets/accounts: FA.
 - Assets and liabilities when applicable: AL, even if also disclosed in FA.
 
-## 6. Filing sequence
+## 7. Filing sequence
 
 Recommended entry order:
 
@@ -128,14 +139,15 @@ Recommended entry order:
 12. Tax-paid schedules and self-assessment challan, if applicable.
 13. Part B-TI and TTI refresh.
 14. Form 67 reconciliation, submission, and verification.
-15. Final validation and e-verification.
+15. Export the official JSON and run `scripts/audit_itr_json.py`.
+16. Final official validation and e-verification.
 
 Refresh dependent schedules after upstream edits.
 
 During live filing, give only the current screen's entries and one control total. Use
 [portal-step-by-step.md](portal-step-by-step.md) for payment, validation, and submission.
 
-## 7. Handoff
+## 8. Handoff
 
 Provide:
 
@@ -145,4 +157,6 @@ Provide:
 - Fields requiring manual dropdown selection.
 - Proxies requiring replacement.
 - Documents to retain or attach.
+- Filing decisions and their evidence.
+- Final JSON audit result and any before/after diff classification.
 - Final validation checklist.
