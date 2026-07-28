@@ -783,10 +783,16 @@ def main() -> int:
     except (OSError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
+    if record["automation"]["user_action_required"]:
+        next_step = "user action"
+    elif record["automation"]["needs_semantic_agent"]:
+        next_step = "semantic agent"
+    else:
+        next_step = "none"
     print(
         f"{record['source']['document_type']}: "
         f"{len(record['claims'])} deterministic claim(s); "
-        f"agent={'no' if handled else 'required'}"
+        f"next={next_step}"
     )
     return 0 if handled else 3
 
