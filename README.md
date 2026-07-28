@@ -10,6 +10,9 @@ The skill supports both document-led reconciliation and live, screen-by-screen f
 ## What it covers
 
 - Form 16, AIS, TIS, and prefill reconciliation
+- Staged intake: primary checklist first, evidence-driven follow-ups second
+- Rigid deterministic extraction for recurring official tax forms
+- Residual-only semantic agent queue instead of one agent for every upload
 - Salary and equity-compensation perquisites
 - Domestic and foreign dividends and interest
 - Capital gains and the distinction between actual sales and tax-withheld shares
@@ -94,44 +97,49 @@ and A3 CSV files from my redacted broker statements.
 
 The skill:
 
-1. Establishes the assessment year, residency, regime, form, and filing basis.
-2. Inventories and reconciles source documents before classifying income.
+1. Starts by requesting Form 16, AIS, and TIS, with prefill JSON and 26AS recommended.
+2. Establishes the assessment year, residency, regime, form, and filing basis.
 3. Hashes every source and preprocesses only new or changed file versions.
-4. Uses isolated per-file worker outputs and one deterministic central-store merge.
-5. Builds separate salary, income, foreign-tax, cash, account, and equity-lot ledgers.
-6. Applies schedule-specific dates and conversion rules.
-7. Maps reconciled facts into the ITR-2 schedules.
-8. Guides live filing one screen at a time with a control total at each checkpoint.
-9. Reconciles Form 67, self-assessment tax, Schedule IT, and the final utility export.
-10. Audits final JSON arithmetic and rejects unrelated changes after payment.
-11. Preserves unresolved items instead of inventing values.
+4. Uses rigid scripts for supported official forms and sends only residual files to agents.
+5. Generates conditional document requests from extracted evidence.
+6. Uses isolated one-file worker outputs and one deterministic central-store merge.
+7. Builds separate salary, income, foreign-tax, cash, account, and equity-lot ledgers.
+8. Applies schedule-specific dates and conversion rules.
+9. Maps reconciled facts into the ITR-2 schedules.
+10. Guides live filing one screen at a time with a control total at each checkpoint.
+11. Reconciles Form 67, self-assessment tax, Schedule IT, and the final utility export.
+12. Audits final JSON arithmetic and rejects unrelated changes after payment.
+13. Preserves unresolved items instead of inventing values.
 
 The detailed live-filing sequence is in
 [`portal-step-by-step.md`](india-itr2-foreign-assets/references/portal-step-by-step.md).
 
-## Incremental source preprocessing
+## Staged intake and fast preprocessing
 
-For a document-heavy return, initialize a private workpaper:
+Initialize intake and print the primary checklist:
 
 ```bash
-python3 india-itr2-foreign-assets/scripts/source_store.py init \
-  --workspace /private/path/itr-workpaper
+python3 india-itr2-foreign-assets/scripts/intake_manager.py start \
+  --workspace /private/path/itr-workpaper \
+  --assessment-year 2026-27
+```
 
-python3 india-itr2-foreign-assets/scripts/source_store.py scan \
+After the initial documents are ready, run the complete fast pipeline:
+
+```bash
+python3 india-itr2-foreign-assets/scripts/run_intake_pipeline.py \
   --workspace /private/path/itr-workpaper \
   --source-dir /private/path/source-documents \
   --replace-inventory \
-  --extractor-version parser-1.0.0_claims-1
-
-python3 india-itr2-foreign-assets/scripts/preprocess_sources.py \
-  --workspace /private/path/itr-workpaper \
   --jobs 4
 ```
 
-The generic preprocessor normalizes PDF pages, spreadsheet cells, CSV rows, JSON
-paths, archive members, text and other supported structures. The generated work
-queue then contains one isolated semantic-classification job per new or changed
-file. One agent task handles exactly one file: all available slots launch
+The generic preprocessor normalizes PDF pages, spreadsheet cells, CSV rows,
+JSON paths, archives, and text. The rigid extractor then handles supported Form
+16/12BA, AIS, TIS, prefill/ITR JSON, 26AS, and 1042-S fields. Only incomplete or
+unrecognized files remain in `semantic_queue.json`.
+
+One agent handles exactly one residual file: all available slots launch
 immediately, and queued one-file tasks refill them as they finish. Workers write
 per-source records; a single coordinator performs the atomic merge:
 
@@ -144,6 +152,13 @@ Every extracted claim records the exact file hash and page, row, cell, or JSON
 path that supports it. Reconciled facts depend on claim IDs, so changing one
 source makes only dependent facts stale. Follow-up questions use the central
 store instead of rereading every source.
+
+Conditional document requests are regenerated with:
+
+```bash
+python3 india-itr2-foreign-assets/scripts/intake_manager.py assess \
+  --workspace /private/path/itr-workpaper
+```
 
 The private workspace is initialized with a deny-all `.gitignore`. Never create
 it inside this public repository. See

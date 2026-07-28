@@ -13,6 +13,11 @@
 
 ## 1. Intake and scoping
 
+Start with the staged primary checklist and wait for the user to supply or list
+the initial set. Then run the deterministic pipeline and generate conditional
+requests. Follow [staged-intake.md](staged-intake.md); do not request the entire
+possible document universe at once.
+
 Record:
 
 - Assessment year and previous year.

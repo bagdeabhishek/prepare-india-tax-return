@@ -9,40 +9,54 @@ Reconcile source documents into an auditable ITR-2 filing package. Treat the wor
 
 ## Core workflow
 
-1. Establish scope:
+1. Start staged intake:
+   - Before inspecting files, present the primary checklist: Form 16 Part A/B for every employer, AIS, TIS, and recommended portal prefill JSON/Form 26AS.
+   - Ask the user to upload or list the primary set. Do not ask for every conditional document upfront.
+   - Run `scripts/intake_manager.py start` and wait until the user says the initial set is ready.
+   - Read [references/staged-intake.md](references/staged-intake.md) completely.
+2. Establish scope:
    - Confirm assessment year, financial year, calendar year used by Schedule FA, residential status, regime, filing status, and ITR form.
    - Confirm whether the taxpayer is resident and ordinarily resident before treating Schedule FA as applicable.
    - Do not reuse dates, exchange rates, thresholds, or form rules from another assessment year without current verification.
    - Create `filing-decisions.json` in the private workpaper and record each portal decision once with its basis and source claim IDs. Read [references/filing-decisions.md](references/filing-decisions.md).
-2. Secure, inventory, and hash documents:
+3. Secure, inventory, and hash the supplied documents:
    - Accept passwords only for opening the supplied files; do not repeat passwords or embed them in outputs.
-   - Inventory Form 16 Part A/B, Annexure, AIS JSON/PDF, TIS, prefill JSON, bank statements, broker quarterly/annual statements, 1042-S or equivalent tax forms, vest notices, trade confirmations, and loan documents.
+   - Inventory the primary set first. Add broker, Form 1042-S, vest, trade, bank, property, and loan documents only when extracted signals or confirmed facts make them relevant.
    - Detect duplicates and misleading filenames by content, period, account, opening/closing balance, and transaction identity.
    - Before tax analysis, run the preprocessing workflow in [references/source-ledger.md](references/source-ledger.md).
    - Hash every source and reuse its extraction when the SHA-256 is unchanged. Do not reopen an unchanged source merely to answer a follow-up.
-3. Extract changed sources in parallel:
-   - Normalize the work queue first with `scripts/preprocess_sources.py`; do not create a one-off parser for a supported format.
-   - Treat one agent task per queued file as a scheduling invariant. Never assign two source files to the same task or ask one worker to inspect a directory.
+4. Run the deterministic pipeline:
+   - Use `scripts/run_intake_pipeline.py` to hash, normalize, rigidly extract standard documents, merge automated claims, and generate `semantic_queue.json`.
+   - Use high local concurrency for deterministic parsing. Do not spend agent slots on standard documents whose required controls passed.
+   - Use `scripts/extract_standard_tax.py` for Form 16/12BA, AIS, TIS, prefill/ITR JSON, Form 26AS, and Form 1042-S. If a layout is incomplete or changed, route it to an agent instead of guessing.
+   - Reuse cached outputs when the file hash and parser/extractor versions are unchanged.
+5. Ask evidence-driven follow-ups:
+   - Run `scripts/intake_manager.py assess`.
+   - Request only documents triggered by extracted facts: foreign statements/tax forms, equity-plan evidence, capital-gain reports, bank certificates, loan/property evidence, or Schedule AL balances.
+   - Record unresolved gating answers with `scripts/intake_manager.py record`, reassess, and stop intake once all material facts are supported.
+6. Extract residual sources in parallel:
+   - Dispatch agents only from `semantic_queue.json`, never from the original inventory.
+   - Treat one agent task per residual file as a scheduling invariant. Never assign two source files to the same task or ask one worker to inspect a directory.
    - Launch the maximum available agent concurrency immediately. If files exceed available slots, keep one-file tasks queued and refill each slot as soon as its prior task finishes.
    - Reuse an idle agent with a follow-up task when agent-creation limits require it, but give that turn exactly one file. The coordinator may process at most one file itself while coordinating.
    - Give each worker the normalized document envelope. Reopen the raw source only when normalization is partial/failed or visual evidence is required.
    - Never let workers concurrently edit the central store. Each worker writes only its assigned source record; the coordinator performs the single merge.
-4. Build independent ledgers from the central store:
+7. Build independent ledgers from the central store:
    - Salary and perquisite ledger.
    - Domestic interest/dividend/capital-gain ledger.
    - Foreign cash, dividend, interest, tax-withholding, acquisition-lot, sale, and account-balance ledgers.
    - Keep original currency, transaction date, quantity, price/FMV, tax, and source document/page.
-5. Reconcile before classifying:
+8. Reconcile before classifying:
    - Tie quarterly openings to prior closings.
    - Tie lot quantities to closing holdings.
    - Tie dividends and withholding to annual tax forms, allowing for tax-form rounding.
    - Distinguish shares withheld for payroll tax from an actual investor-directed sale.
    - Flag unresolved discrepancies and proxy dates; never silently force totals.
    - Record each reconciled fact with the claim IDs it depends on. A changed source hash must invalidate only dependent facts.
-6. Map reconciled facts to ITR schedules.
-7. Apply the correct conversion rule for each field.
-8. Generate import files or a manual-entry checklist.
-9. Audit the official utility export, validate control totals, and explain every figure changed.
+9. Map reconciled facts to ITR schedules.
+10. Apply the correct conversion rule for each field.
+11. Generate import files or a manual-entry checklist.
+12. Audit the official utility export, validate control totals, and explain every figure changed.
 
 Read [references/return-workflow.md](references/return-workflow.md) for the complete document-to-schedule sequence.
 
@@ -56,11 +70,16 @@ recorded decision unless new evidence invalidates it.
 Use `scripts/source_store.py` for document-led work:
 
 ```bash
-python3 scripts/source_store.py init --workspace /private/path/itr-workpaper
-python3 scripts/source_store.py scan --workspace /private/path/itr-workpaper --source-dir /private/path/sources
-python3 scripts/preprocess_sources.py --workspace /private/path/itr-workpaper --jobs 4
-# Dispatch one semantic extraction worker for every item in work_queue.json.
+python3 scripts/intake_manager.py start \
+  --workspace /private/path/itr-workpaper \
+  --assessment-year 2026-27
+python3 scripts/run_intake_pipeline.py \
+  --workspace /private/path/itr-workpaper \
+  --source-dir /private/path/sources \
+  --jobs 8
+# Dispatch one semantic worker for every item remaining in semantic_queue.json.
 python3 scripts/source_store.py merge --workspace /private/path/itr-workpaper
+python3 scripts/intake_manager.py assess --workspace /private/path/itr-workpaper
 python3 scripts/source_store.py status --workspace /private/path/itr-workpaper
 ```
 
@@ -82,6 +101,7 @@ Read [references/portal-step-by-step.md](references/portal-step-by-step.md) befo
 
 ## Conditional references
 
+- Before intake or processing a new return, read [references/staged-intake.md](references/staged-intake.md).
 - For RSUs, ESPP, vesting, withholding shares, and lot construction, read [references/equity-compensation.md](references/equity-compensation.md).
 - For Schedule OS, FSI, TR, DTAA relief, Rule 115, Rule 128, and Form 67, read [references/foreign-income-ftc.md](references/foreign-income-ftc.md).
 - For Schedule FA A1/A2/A3, read [references/schedule-fa.md](references/schedule-fa.md).

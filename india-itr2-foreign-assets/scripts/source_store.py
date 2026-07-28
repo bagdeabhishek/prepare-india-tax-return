@@ -22,6 +22,8 @@ FACTS = "reconciled_facts.json"
 INCOMING = "incoming"
 RECORDS = "source-records"
 NORMALIZED = "normalized"
+DETERMINISTIC = "deterministic-records"
+SEMANTIC_QUEUE = "semantic_queue.json"
 
 
 class StoreError(Exception):
@@ -105,6 +107,7 @@ def init_workspace(args: argparse.Namespace) -> None:
     (workspace / INCOMING).mkdir(exist_ok=True)
     (workspace / RECORDS).mkdir(exist_ok=True)
     (workspace / NORMALIZED).mkdir(exist_ok=True)
+    (workspace / DETERMINISTIC).mkdir(exist_ok=True)
 
     gitignore = workspace / ".gitignore"
     if not gitignore.exists():
@@ -140,6 +143,15 @@ def init_workspace(args: argparse.Namespace) -> None:
                 "reconciled_facts": [],
                 "pending_sources": [],
                 "warnings": [],
+            },
+        )
+    if not (workspace / SEMANTIC_QUEUE).exists():
+        atomic_json(
+            workspace / SEMANTIC_QUEUE,
+            {
+                "schema_version": SCHEMA_VERSION,
+                "generated_by": None,
+                "items": [],
             },
         )
     print(f"Initialized private source store: {workspace}")
@@ -250,6 +262,7 @@ def scan_sources(args: argparse.Namespace) -> None:
                     "state": reason,
                     "previous_sha256": old.get("sha256") if version_changed else None,
                     "requested_extractor_version": args.extractor_version,
+                    "duplicate_content_of": duplicate_of,
                     "agent_output": str(workspace / incoming_rel),
                     "normalized_output": str(workspace / normalized_rel),
                 }

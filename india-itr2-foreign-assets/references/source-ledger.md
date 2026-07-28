@@ -39,7 +39,10 @@ itr-workpaper/
 ├── .gitignore
 ├── manifest.json
 ├── work_queue.json
+├── semantic_queue.json
 ├── normalized/
+│   └── <source-id>/<sha256>.json
+├── deterministic-records/
 │   └── <source-id>/<sha256>.json
 ├── incoming/
 │   └── <source-id>.json
@@ -59,10 +62,11 @@ Run preprocessing before substantive tax analysis:
 
 1. Initialize the workspace.
 2. Scan all supplied files and compute SHA-256 hashes.
-3. Read `work_queue.json`.
-4. Run `preprocess_sources.py` to generate normalized document envelopes.
-5. Dispatch one semantic extraction worker for each queued file, subject to the
-   available agent limit. Process remaining files in batches.
+3. Run `run_intake_pipeline.py` to normalize changed sources and apply the
+   versioned rigid standard-tax extractor.
+4. Read `semantic_queue.json`; do not dispatch agents from `work_queue.json`.
+5. Dispatch one semantic extraction worker for each residual queued file,
+   subject to the available agent limit. Process remaining files in batches.
 6. Have each worker read `normalized_output` and write its result to the exact
    `agent_output` path in its queue item.
 7. Run one coordinator merge after all available workers finish.
@@ -74,14 +78,11 @@ Commands:
 
 ```bash
 python3 scripts/source_store.py init --workspace /private/itr-workpaper
-python3 scripts/source_store.py scan \
+python3 scripts/run_intake_pipeline.py \
   --workspace /private/itr-workpaper \
   --source-dir /private/source-documents \
   --replace-inventory \
-  --extractor-version parser-1.0.0_claims-1
-python3 scripts/preprocess_sources.py \
-  --workspace /private/itr-workpaper \
-  --jobs 4
+  --jobs 8
 python3 scripts/source_store.py merge --workspace /private/itr-workpaper
 python3 scripts/source_store.py set-facts \
   --workspace /private/itr-workpaper \
@@ -96,9 +97,9 @@ inactive. Use `--force` for an intentional full re-extraction.
 
 ## 4. Parallel worker contract
 
-Treat `one queue item = one agent task = one source file` as mandatory unless the
-item is skipped because its hash is unchanged or it is an exact byte duplicate
-whose extraction is safely reused.
+Treat `one semantic_queue item = one agent task = one source file` as mandatory.
+Files completed by the rigid extractor, unchanged hashes, and safely reused
+exact duplicates do not receive an agent.
 
 Scheduling rules:
 
@@ -118,6 +119,7 @@ Give each worker only:
 - One source file.
 - The matching queue item.
 - The normalized envelope at `normalized_output`.
+- The deterministic draft at `deterministic_record`, when present.
 - `assets/source-record.schema.json`.
 - The relevant domain reference, if needed.
 - The exact `agent_output` path.
@@ -134,12 +136,15 @@ Require the worker to:
 8. Exclude passwords, tokens, and unnecessary full identifiers.
 9. Record `normalized_document` path, source hash, parser version, and status in
    the source record.
-10. Write only its own incoming record.
+10. Set `extractor.version` to the queue item's
+    `requested_extractor_version` so unchanged files remain cached.
+11. Write only its own incoming record.
 
-Do not write a custom parsing script when the generic parser returned a complete
-envelope. If normalization is partial or failed, inspect its warnings and follow
-[generic-parsing.md](generic-parsing.md). Add reusable support to the generic
-parser instead of creating a taxpayer-specific extractor.
+Do not re-extract claims already produced by the rigid extractor. If
+normalization or deterministic extraction is partial, inspect its warnings and
+follow [generic-parsing.md](generic-parsing.md). Add reusable support to the
+generic parser or standard extractor instead of creating a taxpayer-specific
+extractor.
 
 Do not let parsing workers edit `manifest.json`, `central_store.json`, or another
 worker's output. The coordinator is the only merge writer. This avoids lost
