@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 SCRIPT = (
     Path(__file__).parents[1]
-    / "india-itr2-foreign-assets"
+    / "prepare-india-tax-return"
     / "scripts"
     / "prepare_fa_csv.py"
 )

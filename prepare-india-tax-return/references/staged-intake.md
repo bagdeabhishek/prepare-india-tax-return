@@ -37,14 +37,16 @@ python3 scripts/intake_manager.py start \
 
 Present this initial list:
 
-- Form 16 Part A and Part B for every employer; include a separate Form 12BA
-  annexure if supplied.
+- Form 16 Part A and Part B for every employer when salary/pension through an
+  employer applies; include a separate Form 12BA annexure if supplied.
 - AIS as decrypted JSON or PDF.
 - TIS PDF.
 - Fresh official portal prefill JSON (recommended).
 - Form 26AS/tax-credit statement (recommended).
 
-Ask whether there are multiple employers and whether any files are encrypted.
+Ask which income heads apply, whether there are multiple employers, whether
+business/professional or trading income exists, and whether any files are
+encrypted.
 Receive passwords separately and only through the password mechanism; never put
 them in filenames, command arguments, logs, or the workpaper.
 
@@ -82,7 +84,8 @@ Rigid extraction covers stable fields from:
 - AIS JSON rows and recognizable AIS PDF categories.
 - TIS categories.
 - Official portal prefill JSON.
-- Official ITR-2 export JSON.
+- Official utility export JSON for a recognized supported form (with the
+  deepest bundled final-export checks currently implemented for ITR-2).
 - Form 26AS totals.
 - Form 1042-S gross income, rate, and withholding boxes.
 
@@ -112,6 +115,8 @@ Typical triggers:
 | Bank interest | Interest certificate and 31 March savings/FD statements |
 | House/property loan | Loan certificate, statement, agreement/title, invoices, ownership evidence |
 | Under-construction property | Completion/possession or current construction-status evidence |
+| Business/professional, F&O, intraday, or presumptive income | Books/P&L/balance sheet, bank and broker records, GST/TDS records, audit report if applicable |
+| Brought-forward losses | Prior ITR acknowledgement, computation, and Schedule CFL details |
 | Schedule AL threshold crossed | 31 March bank/FD balances, share cost, asset cost, related liabilities |
 
 When evidence does not answer a gating fact, ask one concise factual question.
@@ -125,8 +130,9 @@ python3 scripts/intake_manager.py record \
 ```
 
 Supported fact keys are open-ended. Common keys are
-`foreign_holdings`, `equity_compensation`, `capital_asset_sales`, `home_loan`,
-and `property_under_construction`.
+`salary_income`, `business_income`, `foreign_holdings`,
+`equity_compensation`, `capital_asset_sales`, `brought_forward_losses`,
+`home_loan`, and `property_under_construction`.
 
 ## 5. Phase 4 — residual parallel agents
 

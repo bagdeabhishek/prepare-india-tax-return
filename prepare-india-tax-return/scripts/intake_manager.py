@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Manage staged, evidence-driven document intake for an ITR-2 workpaper."""
+"""Manage staged, evidence-driven document intake for an Indian ITR workpaper."""
 
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ def utc_now() -> str:
 INITIAL_REQUESTS = [
     {
         "request_id": "initial-form16",
-        "priority": "REQUIRED",
+        "priority": "REQUIRED_IF_SALARIED",
         "document": "Form 16 Part A and Part B for every employer",
         "accepted": ["PDF", "separate Part A/Part B PDFs", "12BA annexure"],
         "reason": "salary, perquisites, deductions, TDS, and employer reconciliation",
@@ -132,7 +132,9 @@ def start(args: argparse.Namespace) -> None:
         "phase": "INITIAL_DOCUMENTS",
         "requests": INITIAL_REQUESTS,
         "questions": [
+            "Which income heads apply: salary, house property, capital gains, business/profession, or other sources?",
             "Are there multiple employers or multiple Form 16 sets?",
+            "Did you have business/professional income, F&O, intraday trading, or presumptive income?",
             "Are any files password-protected? Provide passwords separately, never in filenames.",
         ],
     }
@@ -259,9 +261,15 @@ def next_requests(
     has_encrypted_ais = "AIS_ENCRYPTED_EXPORT" in document_types
     has_tis = "TIS" in document_types
     has_prefill = "ITR_PREFILL" in document_types
+    salary_income = fact_value(state, "salary_income")
 
-    if not has_form16:
+    if not has_form16 and salary_income is not False:
         requests.append(INITIAL_REQUESTS[0])
+        if salary_income is None:
+            questions.append(
+                "Did you receive salary or pension reported through an employer "
+                "during the financial year?"
+            )
     if not has_ais:
         requests.append(INITIAL_REQUESTS[1])
         if has_encrypted_ais:
@@ -275,7 +283,9 @@ def next_requests(
     if not has_prefill:
         requests.append(INITIAL_REQUESTS[3])
 
-    initial_complete = has_form16 and has_ais and has_tis
+    initial_complete = has_ais and has_tis and (
+        has_form16 or salary_income is False
+    )
     if not initial_complete:
         return {
             "schema_version": SCHEMA_VERSION,
@@ -300,6 +310,29 @@ def next_requests(
     actual_sales = fact_value(state, "capital_asset_sales")
     home_loan = fact_value(state, "home_loan")
     under_construction = fact_value(state, "property_under_construction")
+    business_income = fact_value(state, "business_income")
+    brought_forward_losses = fact_value(state, "brought_forward_losses")
+
+    if business_income is None:
+        questions.append(
+            "Did you have business/professional income, F&O, intraday trading, "
+            "or presumptive income during the financial year?"
+        )
+    if business_income is True:
+        requests.extend(
+            [
+                request(
+                    "business-books",
+                    "Business/professional profit and loss account, balance sheet, ledgers, and bank statements",
+                    "determine ITR-3/ITR-4 eligibility and support business-income schedules",
+                ),
+                request(
+                    "business-compliance",
+                    "GST returns, TDS records, presumptive-income working, and tax-audit report if applicable",
+                    "reconcile turnover/receipts and identify audit or presumptive-filing conditions",
+                ),
+            ]
+        )
 
     if perquisites > 0 and equity_comp is None:
         questions.append(
@@ -375,6 +408,19 @@ def next_requests(
         questions.append(
             "Were any shares, mutual funds, property, virtual assets, or other "
             "capital assets actually sold or transferred during the financial year?"
+        )
+
+    if (capital_gains > 0 or business_income is True) and brought_forward_losses is None:
+        questions.append(
+            "Are there brought-forward or unabsorbed losses from an earlier return?"
+        )
+    if brought_forward_losses is True:
+        requests.append(
+            request(
+                "prior-return-losses",
+                "Prior-year ITR acknowledgement, computation, and Schedule CFL/loss details",
+                "verify eligible brought-forward losses and continuity of the selected ITR form",
+            )
         )
 
     if interest > 0:
@@ -486,7 +532,7 @@ def print_requests(payload: dict[str, Any]) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Stage ITR document intake and conditional follow-ups"
+        description="Stage Indian ITR document intake and conditional follow-ups"
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 

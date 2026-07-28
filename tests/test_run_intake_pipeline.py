@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).parents[1]
-SCRIPTS = ROOT / "india-itr2-foreign-assets" / "scripts"
+SCRIPTS = ROOT / "prepare-india-tax-return" / "scripts"
 
 
 class RunIntakePipelineTest(unittest.TestCase):

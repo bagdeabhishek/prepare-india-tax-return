@@ -1,21 +1,31 @@
 ---
-name: india-itr2-foreign-assets
-description: End-to-end reconciliation and filing assistance for Indian ITR-2 returns involving Form 16, AIS/TIS, foreign brokerage or custodial accounts, RSUs, ESPP shares, foreign dividends, interest, withholding tax, Schedule OS, CG, FSI, TR, FA, AL, and Form 67. Use when Codex must analyze salary or broker PDFs/CSVs/JSON, reconcile foreign holdings and lots, convert USD income or assets to INR, prepare Schedule FA A1/A2/A3 records, fix Income Tax portal CSV-import errors, or guide a resident individual through foreign-income and foreign-asset filing.
+name: prepare-india-tax-return
+description: Prepare and reconcile Indian individual income-tax returns from source documents through form selection, schedule mapping, tax-payment checks, final validation, and screen-by-screen filing. Use when Codex must analyze Form 16, AIS/TIS, 26AS, prefill or utility JSON, bank/broker/property/business records; choose among ITR-1/2/3/4; compare filing evidence; build an auditable source ledger; guide the Income Tax portal; or handle specialist cases involving capital gains, foreign holdings, RSUs/ESPP, Schedule FA/FSI/TR/AL, and Form 67.
 ---
 
-# India ITR-2 Foreign Assets
+# Prepare India Tax Return
 
-Reconcile source documents into an auditable ITR-2 filing package. Treat the work as high-stakes financial assistance: verify current official rules, expose assumptions, preserve source evidence, and never fabricate unavailable account or lot data.
+Reconcile source documents into an auditable Indian individual-return filing
+package. Select the ITR form from the facts instead of assuming ITR-2. Treat the
+work as high-stakes financial assistance: verify current official rules, expose
+assumptions, preserve source evidence, and never fabricate unavailable data.
+
+The intake, provenance, reconciliation, and portal workflow applies across
+ITR-1/2/3/4. Use only form-specific calculations and validators that the skill
+actually implements and has verified for the applicable assessment year.
+Identify unsupported business, audit, residency, or treaty cases explicitly
+and recommend professional review rather than implying full coverage.
 
 ## Core workflow
 
 1. Start staged intake:
-   - Before inspecting files, present the primary checklist: Form 16 Part A/B for every employer, AIS, TIS, and recommended portal prefill JSON/Form 26AS.
+   - Before inspecting files, present the primary checklist: AIS, TIS, Form 16 Part A/B for every employer when salary applies, and recommended portal prefill JSON/Form 26AS.
    - Ask the user to upload or list the primary set. Do not ask for every conditional document upfront.
    - Run `scripts/intake_manager.py start` and wait until the user says the initial set is ready.
    - Read [references/staged-intake.md](references/staged-intake.md) completely.
 2. Establish scope:
    - Confirm assessment year, financial year, calendar year used by Schedule FA, residential status, regime, filing status, and ITR form.
+   - Determine income heads and ITR-1/2/3/4 eligibility before mapping schedules. Do not infer the form from the uploaded filenames.
    - Confirm whether the taxpayer is resident and ordinarily resident before treating Schedule FA as applicable.
    - Do not reuse dates, exchange rates, thresholds, or form rules from another assessment year without current verification.
    - Create `filing-decisions.json` in the private workpaper and record each portal decision once with its basis and source claim IDs. Read [references/filing-decisions.md](references/filing-decisions.md).
@@ -41,9 +51,10 @@ Reconcile source documents into an auditable ITR-2 filing package. Treat the wor
    - Reuse an idle agent with a follow-up task when agent-creation limits require it, but give that turn exactly one file. The coordinator may process at most one file itself while coordinating.
    - Give each worker the normalized document envelope. Reopen the raw source only when normalization is partial/failed or visual evidence is required.
    - Never let workers concurrently edit the central store. Each worker writes only its assigned source record; the coordinator performs the single merge.
-7. Build independent ledgers from the central store:
+7. Build only the applicable independent ledgers from the central store:
    - Salary and perquisite ledger.
    - Domestic interest/dividend/capital-gain ledger.
+   - House-property, business/professional, and deduction ledgers when those income heads or claims are present.
    - Foreign cash, dividend, interest, tax-withholding, acquisition-lot, sale, and account-balance ledgers.
    - Keep original currency, transaction date, quantity, price/FMV, tax, and source document/page.
 8. Reconcile before classifying:
@@ -168,8 +179,9 @@ The script enforces the operational importer format documented in [references/po
 
 ## Final utility-export audit
 
-Never treat visual portal totals as the only final control. Run the read-only
-auditor against the latest official ITR-2 utility export:
+Never treat visual portal totals as the only final control. Use the current
+official utility validator for the selected form. When the selected form is
+ITR-2, also run the bundled read-only auditor:
 
 ```bash
 python3 scripts/audit_itr_json.py FINAL_OFFICIAL_EXPORT.json

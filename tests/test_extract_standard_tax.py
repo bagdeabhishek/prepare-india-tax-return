@@ -5,7 +5,7 @@ from pathlib import Path
 
 
 SCRIPTS = (
-    Path(__file__).parents[1] / "india-itr2-foreign-assets" / "scripts"
+    Path(__file__).parents[1] / "prepare-india-tax-return" / "scripts"
 )
 sys.path.insert(0, str(SCRIPTS))
 SCRIPT = SCRIPTS / "extract_standard_tax.py"

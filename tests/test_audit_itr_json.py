@@ -8,7 +8,7 @@ from pathlib import Path
 
 SCRIPT = (
     Path(__file__).parents[1]
-    / "india-itr2-foreign-assets"
+    / "prepare-india-tax-return"
     / "scripts"
     / "audit_itr_json.py"
 )

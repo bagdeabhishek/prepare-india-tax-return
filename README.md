@@ -1,14 +1,29 @@
-# India ITR-2 Foreign Assets Skill
+# Prepare India Tax Return
 
-A Codex skill for reconciling and filing Indian ITR-2 returns involving salary, RSUs, ESPP shares, foreign brokerage accounts, dividends, foreign tax credit, Schedule FA, Schedule AL, and Form 67.
+A document-first Codex skill for preparing Indian individual income-tax
+returns—from staged evidence collection and ITR-form selection through
+reconciliation, schedule mapping, portal entry, tax-payment checks, and final
+validation.
 
-The skill supports both document-led reconciliation and live, screen-by-screen filing assistance in the Income Tax Department portal or offline utility.
+It supports document-led preparation and live, one-screen-at-a-time assistance
+in the Income Tax Department portal or offline utility.
+
+> [!NOTE]
+> This is **not an ITR-2-only or Schedule FA-only skill**. The intake,
+> provenance, reconciliation, and filing workflow is designed for Indian
+> individual returns generally and begins by selecting the applicable ITR form.
+> Its deepest specialist modules and final-export tests currently cover ITR-2,
+> foreign assets/income, equity compensation, Schedule FA/FSI/TR/AL, and Form
+> 67. ITR-3/4 business, audit, and other unsupported computations must be
+> identified and verified using current form-specific guidance or escalated to
+> a qualified professional.
 
 > [!IMPORTANT]
 > This project provides educational filing assistance, not legal, tax, or investment advice. Tax rules, schemas, portal behavior, deadlines, exchange-rate requirements, and treaty interpretations can change. Verify current official guidance and consult a qualified tax professional when facts are uncertain or material.
 
 ## What it covers
 
+- Evidence-based ITR-1/2/3/4 form selection and support-boundary checks
 - Form 16, AIS, TIS, and prefill reconciliation
 - Staged intake: primary checklist first, evidence-driven follow-ups second
 - Rigid deterministic extraction for recurring official tax forms
@@ -16,6 +31,8 @@ The skill supports both document-led reconciliation and live, screen-by-screen f
 - Salary and equity-compensation perquisites
 - Domestic and foreign dividends and interest
 - Capital gains and the distinction between actual sales and tax-withheld shares
+- Conditional intake for house property, business/professional income,
+  F&O/intraday activity, presumptive income, and brought-forward losses
 - Schedule OS, CG, FSI, TR, FA, AL, SI, and tax-paid schedules
 - Rule 115 and Rule 128 conversion controls
 - Foreign custodial accounts and foreign equity lots
@@ -51,14 +68,15 @@ Use synthetic or thoroughly redacted examples in issues and pull requests. The s
 Clone the repository:
 
 ```bash
-git clone https://github.com/bagdeabhishek/india-itr2-foreign-assets-skill.git
+git clone https://github.com/bagdeabhishek/india-itr2-foreign-assets-skill.git \
+  prepare-india-tax-return
 ```
 
 Copy the skill folder into your Codex skills directory:
 
 ```bash
 mkdir -p ~/.codex/skills
-cp -R india-itr2-foreign-assets-skill/india-itr2-foreign-assets ~/.codex/skills/
+cp -R prepare-india-tax-return/prepare-india-tax-return ~/.codex/skills/
 ```
 
 Restart or refresh Codex so the skill is discovered.
@@ -66,8 +84,8 @@ Restart or refresh Codex so the skill is discovered.
 You can also ask Codex to install the skill from the repository path:
 
 ```text
-Install the india-itr2-foreign-assets skill from
-https://github.com/bagdeabhishek/india-itr2-foreign-assets-skill/tree/main/india-itr2-foreign-assets
+Install the prepare-india-tax-return skill from
+https://github.com/bagdeabhishek/india-itr2-foreign-assets-skill/tree/main/prepare-india-tax-return
 ```
 
 ## Usage
@@ -75,21 +93,22 @@ https://github.com/bagdeabhishek/india-itr2-foreign-assets-skill/tree/main/india
 Invoke the skill explicitly:
 
 ```text
-Use $india-itr2-foreign-assets to reconcile my Form 16, AIS, broker
-statements, foreign income, and Schedule FA for ITR-2.
+Use $prepare-india-tax-return to collect and reconcile my tax documents,
+determine the applicable ITR form, and prepare a schedule-by-schedule filing
+checklist.
 ```
 
 For live filing:
 
 ```text
-Use $india-itr2-foreign-assets and guide me one portal screen at a time.
+Use $prepare-india-tax-return and guide me one portal screen at a time.
 I am currently at Schedule Other Sources.
 ```
 
 For foreign-asset CSV work:
 
 ```text
-Use $india-itr2-foreign-assets to prepare portal-ready Schedule FA A2
+Use $prepare-india-tax-return to prepare portal-ready Schedule FA A2
 and A3 CSV files from my redacted broker statements.
 ```
 
@@ -97,7 +116,7 @@ and A3 CSV files from my redacted broker statements.
 
 The skill:
 
-1. Starts by requesting Form 16, AIS, and TIS, with prefill JSON and 26AS recommended.
+1. Starts with AIS and TIS, requests Form 16 when salary applies, and recommends prefill JSON and 26AS.
 2. Establishes the assessment year, residency, regime, form, and filing basis.
 3. Hashes every source and preprocesses only new or changed file versions.
 4. Uses rigid scripts for supported official forms and sends only residual files to agents.
@@ -105,21 +124,21 @@ The skill:
 6. Uses isolated one-file worker outputs and one deterministic central-store merge.
 7. Builds separate salary, income, foreign-tax, cash, account, and equity-lot ledgers.
 8. Applies schedule-specific dates and conversion rules.
-9. Maps reconciled facts into the ITR-2 schedules.
+9. Maps reconciled facts into the schedules of the selected ITR form.
 10. Guides live filing one screen at a time with a control total at each checkpoint.
 11. Reconciles Form 67, self-assessment tax, Schedule IT, and the final utility export.
 12. Audits final JSON arithmetic and rejects unrelated changes after payment.
 13. Preserves unresolved items instead of inventing values.
 
 The detailed live-filing sequence is in
-[`portal-step-by-step.md`](india-itr2-foreign-assets/references/portal-step-by-step.md).
+[`portal-step-by-step.md`](prepare-india-tax-return/references/portal-step-by-step.md).
 
 ## Staged intake and fast preprocessing
 
 Initialize intake and print the primary checklist:
 
 ```bash
-python3 india-itr2-foreign-assets/scripts/intake_manager.py start \
+python3 prepare-india-tax-return/scripts/intake_manager.py start \
   --workspace /private/path/itr-workpaper \
   --assessment-year 2026-27
 ```
@@ -127,7 +146,7 @@ python3 india-itr2-foreign-assets/scripts/intake_manager.py start \
 After the initial documents are ready, run the complete fast pipeline:
 
 ```bash
-python3 india-itr2-foreign-assets/scripts/run_intake_pipeline.py \
+python3 prepare-india-tax-return/scripts/run_intake_pipeline.py \
   --workspace /private/path/itr-workpaper \
   --source-dir /private/path/source-documents \
   --replace-inventory \
@@ -144,7 +163,7 @@ immediately, and queued one-file tasks refill them as they finish. Workers write
 per-source records; a single coordinator performs the atomic merge:
 
 ```bash
-python3 india-itr2-foreign-assets/scripts/source_store.py merge \
+python3 prepare-india-tax-return/scripts/source_store.py merge \
   --workspace /private/path/itr-workpaper
 ```
 
@@ -156,20 +175,20 @@ store instead of rereading every source.
 Conditional document requests are regenerated with:
 
 ```bash
-python3 india-itr2-foreign-assets/scripts/intake_manager.py assess \
+python3 prepare-india-tax-return/scripts/intake_manager.py assess \
   --workspace /private/path/itr-workpaper
 ```
 
 The private workspace is initialized with a deny-all `.gitignore`. Never create
 it inside this public repository. See
-[`source-ledger.md`](india-itr2-foreign-assets/references/source-ledger.md).
+[`source-ledger.md`](prepare-india-tax-return/references/source-ledger.md).
 
 ## Schedule FA CSV utility
 
 Normalize an A2 or A3 CSV using the bundled script:
 
 ```bash
-python3 india-itr2-foreign-assets/scripts/prepare_fa_csv.py \
+python3 prepare-india-tax-return/scripts/prepare_fa_csv.py \
   --table A3 \
   --input source.csv \
   --output portal_ready.csv
@@ -177,12 +196,14 @@ python3 india-itr2-foreign-assets/scripts/prepare_fa_csv.py \
 
 Always download a fresh template from the current portal version and test a single redacted row before importing a full file.
 
-## Final ITR JSON audit
+## Final utility JSON audit
 
-Audit an official utility export without modifying it:
+Always run the official validation for the selected form. For an ITR-2 utility
+export, the bundled auditor adds cross-schedule and checkpoint checks without
+modifying the file:
 
 ```bash
-python3 india-itr2-foreign-assets/scripts/audit_itr_json.py \
+python3 prepare-india-tax-return/scripts/audit_itr_json.py \
   FINAL_OFFICIAL_EXPORT.json
 ```
 
@@ -190,7 +211,7 @@ After adding a challan, require the before/after diff to contain only expected
 payment fields:
 
 ```bash
-python3 india-itr2-foreign-assets/scripts/audit_itr_json.py \
+python3 prepare-india-tax-return/scripts/audit_itr_json.py \
   AFTER_PAYMENT.json \
   --compare BEFORE_PAYMENT.json \
   --expect-payment-only
@@ -207,7 +228,7 @@ printing taxpayer identifiers. Official utility validation remains mandatory.
 ├── LICENSE
 ├── SECURITY.md
 ├── CONTRIBUTING.md
-└── india-itr2-foreign-assets/
+└── prepare-india-tax-return/
     ├── SKILL.md
     ├── agents/openai.yaml
     ├── assets/
@@ -217,11 +238,41 @@ printing taxpayer identifiers. Official utility validation remains mandatory.
 
 ## Scope and limitations
 
-- Designed for individuals using ITR-2, not business or professional income returns.
+- Designed for individual income-tax returns. It selects among ITR-1/2/3/4 but
+  must not claim deterministic support for calculations that are not yet
+  implemented and tested.
+- The shared staged-intake, source-ledger, parsing, reconciliation, and portal
+  workflow is form-agnostic; specialist schedule modules are loaded only when
+  relevant.
+- Current deep validation is strongest for ITR-2. Business/professional income,
+  F&O/intraday cases, presumptive filing, audit applicability, NRI/RNOR
+  computation, and complex loss continuity require current form-specific
+  verification and may require a CA.
 - Schedule FA usually requires resident-and-ordinarily-resident analysis; residency must be established from facts.
 - Foreign-share sales, disputed foreign tax, complex treaty positions, uncertain ownership, or conflicting documents merit professional review.
 - AY-specific portal codes and payment routes included in the skill are examples that must be reverified for later years.
 - The project is not affiliated with the Income Tax Department, CBDT, OpenAI, GitHub, any broker, bank, employer, or tax-preparation provider.
+
+## Related open-source projects
+
+Other active projects solve adjacent parts of Indian return preparation:
+
+- [`itr-prep-skill`](https://github.com/NidheeshJain/itr-prep-skill) covers
+  ITR-1/2/3/4 preparation and emits an annotated data pack for a separate filing
+  agent.
+- [`itr-wala`](https://github.com/karanb192/itr-wala) emphasizes a tested,
+  deterministic tax engine, regime comparison, and guided portal filing.
+- [`itr-agent`](https://github.com/Sagargupta16/itr-agent) is a local-first MCP
+  server for form selection, tax calculations, document reconciliation, and a
+  guided interview.
+
+This project’s distinguishing focus is incremental, hash-addressed document
+processing; conservative rigid extractors for recurring forms; a persistent
+claim-to-source ledger; strict one-file-per-worker residual analysis; live
+screen-by-screen assistance; and deep foreign-asset/equity-compensation
+reconciliation when those modules are applicable. These projects are
+independent—compare their supported assessment years, tests, privacy model, and
+filing boundaries before relying on any of them.
 
 ## Contributing
 

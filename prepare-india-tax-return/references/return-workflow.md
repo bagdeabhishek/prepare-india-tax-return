@@ -28,6 +28,9 @@ Record:
 - Due date, original/revised/belated status, and whether Form 67 has been filed.
 - Whether salary includes RSU/ESPP perquisites.
 - Whether foreign shares were sold, transferred, withheld, or merely vested.
+- Whether business/professional, F&O, intraday, presumptive, or virtual-asset
+  income exists.
+- Whether earlier returns contain losses that affect form selection or CFL.
 
 Do not infer residency from citizenship or employer location.
 
@@ -108,9 +111,15 @@ Use both flow and stock controls:
 
 Preserve discrepancies. Prefer quarterly detail over a rounded annual tax form for exact transaction values.
 
-## 6. Schedule selection
+## 6. Form and schedule selection
 
-Typical ITR-2 mapping:
+Select ITR-1/2/3/4 using current official eligibility rules and the complete
+income profile. Do not choose ITR-2 merely because the foreign-asset modules are
+the most detailed part of this skill. Business/professional, F&O, intraday,
+presumptive, director/unlisted-share, loss-continuity, residency, and
+foreign-asset facts can change the applicable form.
+
+When ITR-2 is selected, typical mapping is:
 
 - Salary and perquisites: Schedule Salary.
 - House property: Schedule HP.

@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for helping improve the India ITR-2 Foreign Assets skill.
+Thank you for helping improve the Prepare India Tax Return skill.
 
 ## Protect taxpayer data
 
@@ -34,13 +34,13 @@ Validate the skill:
 
 ```bash
 python3 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py \
-  india-itr2-foreign-assets
+  prepare-india-tax-return
 ```
 
 Test the CSV normalizer when modifying it:
 
 ```bash
-python3 india-itr2-foreign-assets/scripts/prepare_fa_csv.py --help
+python3 prepare-india-tax-return/scripts/prepare_fa_csv.py --help
 ```
 
 ## Pull requests

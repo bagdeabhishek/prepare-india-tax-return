@@ -1,4 +1,0 @@
-interface:
-  display_name: "India ITR-2 Foreign Assets"
-  short_description: "Staged, fast ITR-2 document reconciliation"
-  default_prompt: "Use $india-itr2-foreign-assets to start with the primary tax-document checklist, process supported forms deterministically, and request only the evidence needed next."

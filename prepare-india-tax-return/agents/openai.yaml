@@ -1,0 +1,4 @@
+interface:
+  display_name: "Prepare India Tax Return"
+  short_description: "Auditable Indian tax-return preparation"
+  default_prompt: "Use $prepare-india-tax-return to collect my tax documents in stages, select the applicable ITR form, reconcile the evidence, and guide me through filing."

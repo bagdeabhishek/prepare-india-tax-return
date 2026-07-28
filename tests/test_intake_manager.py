@@ -5,7 +5,7 @@ from pathlib import Path
 
 
 SCRIPTS = (
-    Path(__file__).parents[1] / "india-itr2-foreign-assets" / "scripts"
+    Path(__file__).parents[1] / "prepare-india-tax-return" / "scripts"
 )
 sys.path.insert(0, str(SCRIPTS))
 SCRIPT = SCRIPTS / "intake_manager.py"
@@ -58,6 +58,27 @@ class IntakeManagerTest(unittest.TestCase):
         self.assertIn("foreign-broker-statements", ids)
         self.assertIn("foreign-tax-form", ids)
         self.assertIn("foreign-trades", ids)
+
+    def test_non_salaried_intake_can_progress_without_form16(self):
+        records = [record("AIS_JSON"), record("TIS")]
+        state = {"facts": {"salary_income": {"value": False}}}
+        payload = intake_manager.next_requests(state, records)
+        self.assertEqual(payload["phase"], "CONDITIONAL_DOCUMENTS")
+        ids = {item["request_id"] for item in payload["requests"]}
+        self.assertNotIn("initial-form16", ids)
+
+    def test_business_income_requests_business_evidence(self):
+        records = [record("AIS_JSON"), record("TIS")]
+        state = {
+            "facts": {
+                "salary_income": {"value": False},
+                "business_income": {"value": True},
+            }
+        }
+        payload = intake_manager.next_requests(state, records)
+        ids = {item["request_id"] for item in payload["requests"]}
+        self.assertIn("business-books", ids)
+        self.assertIn("business-compliance", ids)
 
     def test_home_loan_fact_requests_property_evidence(self):
         records = [

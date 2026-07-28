@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "ITR-2 filing decisions",
+  "title": "Indian income-tax-return filing decisions",
   "type": "object",
   "required": [
     "schema_version",
