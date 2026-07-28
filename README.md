@@ -65,28 +65,118 @@ Use synthetic or thoroughly redacted examples in issues and pull requests. The s
 
 ## Installation
 
-Clone the repository:
+The skill follows the Agent Skills directory format and can be used by Codex,
+Claude Code, and Hermes Agent.
+
+### 1. Clone once
 
 ```bash
 git clone https://github.com/bagdeabhishek/india-itr2-foreign-assets-skill.git \
-  prepare-india-tax-return
+  prepare-india-tax-return-repo
+cd prepare-india-tax-return-repo
 ```
 
-Copy the skill folder into your Codex skills directory:
+The directory that must be installed is
+`prepare-india-tax-return-repo/prepare-india-tax-return/`, not the repository
+root.
+
+### 2. Install for Codex
+
+Install globally for the current user:
 
 ```bash
-mkdir -p ~/.codex/skills
-cp -R prepare-india-tax-return/prepare-india-tax-return ~/.codex/skills/
+mkdir -p ~/.agents/skills
+cp -R prepare-india-tax-return ~/.agents/skills/
 ```
 
-Restart or refresh Codex so the skill is discovered.
+Alternatively, install only for one repository:
 
-You can also ask Codex to install the skill from the repository path:
+```bash
+mkdir -p /path/to/project/.agents/skills
+cp -R prepare-india-tax-return \
+  /path/to/project/.agents/skills/
+```
+
+Start a new Codex task, then invoke it explicitly:
 
 ```text
-Install the prepare-india-tax-return skill from
-https://github.com/bagdeabhishek/india-itr2-foreign-assets-skill/tree/main/prepare-india-tax-return
+Use $prepare-india-tax-return to help prepare my Indian income-tax return.
+Start with staged document intake and do not assume the ITR form.
 ```
+
+Codex can also activate it implicitly when the request matches its description.
+See the official [Codex skills documentation](https://learn.chatgpt.com/docs/customization/overview#skills).
+
+### 3. Install for Claude Code
+
+Install globally for the current user:
+
+```bash
+mkdir -p ~/.claude/skills
+cp -R prepare-india-tax-return ~/.claude/skills/
+```
+
+Alternatively, install only for one repository:
+
+```bash
+mkdir -p /path/to/project/.claude/skills
+cp -R prepare-india-tax-return \
+  /path/to/project/.claude/skills/
+```
+
+Invoke the skill in Claude Code:
+
+```text
+/prepare-india-tax-return Help me prepare my Indian income-tax return.
+```
+
+Claude Code normally detects changes to an existing skills directory live. If
+this is the first skill and `~/.claude/skills/` did not previously exist,
+restart Claude Code. See the official
+[Claude Code skills documentation](https://code.claude.com/docs/en/slash-commands).
+
+### 4. Install for Hermes Agent
+
+On Linux, macOS, or WSL:
+
+```bash
+mkdir -p ~/.hermes/skills
+cp -R prepare-india-tax-return ~/.hermes/skills/
+```
+
+Verify the installation:
+
+```bash
+hermes skills list | grep prepare-india-tax-return
+```
+
+Start a new Hermes session, or reset the current session so its skill index is
+refreshed, then invoke:
+
+```text
+/prepare-india-tax-return Help me prepare my Indian income-tax return.
+```
+
+On native Windows, run from PowerShell after cloning the repository:
+
+```powershell
+New-Item -ItemType Directory -Force `
+  "$env:LOCALAPPDATA\hermes\skills" | Out-Null
+Copy-Item -Recurse `
+  ".\prepare-india-tax-return" `
+  "$env:LOCALAPPDATA\hermes\skills\prepare-india-tax-return"
+```
+
+Hermes stores user skills in `~/.hermes/skills/`; native Windows maps its data
+home to `%LOCALAPPDATA%\hermes`. See the official
+[Hermes skills documentation](https://hermes-agent.nousresearch.com/docs/user-guide/features/skills)
+and [native Windows data layout](https://hermes-agent.nousresearch.com/docs/user-guide/windows-native).
+
+### Updating
+
+Pull the latest repository changes, then copy the skill directory to the same
+agent-specific destination again. Before overwriting a locally modified skill,
+review or back up those changes.
 
 ## Usage
 
