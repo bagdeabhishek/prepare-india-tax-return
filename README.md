@@ -71,13 +71,12 @@ Claude Code, and Hermes Agent.
 ### 1. Clone once
 
 ```bash
-git clone https://github.com/bagdeabhishek/india-itr2-foreign-assets-skill.git \
-  prepare-india-tax-return-repo
-cd prepare-india-tax-return-repo
+git clone https://github.com/bagdeabhishek/prepare-india-tax-return.git
+cd prepare-india-tax-return
 ```
 
 The directory that must be installed is
-`prepare-india-tax-return-repo/prepare-india-tax-return/`, not the repository
+`prepare-india-tax-return/prepare-india-tax-return/`, not the repository
 root.
 
 ### 2. Install for Codex
